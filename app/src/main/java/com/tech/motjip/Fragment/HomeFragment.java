@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -257,6 +258,7 @@ public class HomeFragment extends Fragment implements IViewDetailItemClickCallba
         if (detailPage.getVisibility() == View.VISIBLE) {
             closeDetailPage();
         }
+        ((InputMethodManager) requireActivity().getSystemService(InputMethodManager.class)).hideSoftInputFromWindow(etSearch.getWindowToken(), 0);
         controller.searchMapData(keyword, callback);
     }
 

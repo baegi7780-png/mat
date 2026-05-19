@@ -44,6 +44,11 @@ public class TestController implements IMapStartCallback{
     // 비동기 멀티 쓰레드 작업이 완료되었음을 알립니다.
     IThreadCallback callback;
 
+    // GPS 실패 시 기본 좌표 (목동)
+    private static final LatLng DEFAULT_POSITION = LatLng.from(37.53660174890449, 126.8819899200535);
+    // 현재 사용자 위치 (검색 기준 좌표)
+    private LatLng currentPosition;
+
     public TestController(Activity activity){
         this.testActivity = activity;
     }
@@ -53,6 +58,7 @@ public class TestController implements IMapStartCallback{
     {
         this.mapStarter = new KakaoMapStarter(mapView, this, testActivity);
         this.callback = callback;
+        this.currentPosition = DEFAULT_POSITION;
         mapStarter.start();
     }
 
@@ -61,6 +67,7 @@ public class TestController implements IMapStartCallback{
     {
         this.mapStarter = new KakaoMapStarter(mapView, this, testActivity);
         this.callback = callback;
+        this.currentPosition = startPosition;
         mapStarter.start(startPosition);
     }
 
@@ -110,7 +117,9 @@ public class TestController implements IMapStartCallback{
 
     // 키워드에 따른 데이터를 찾습니다.
     public void searchMapData(String keyword, IThreadReturn1Callback<List<KeywordMapVO>> callback){
-        GetJsonAsync.GetMapSearchDataAsync(keyword,callback);
+        // GetJsonAsync.GetMapSearchDataAsync(keyword,callback);  // 좌표 없는 전체 검색 (보류)
+        LatLng pos = currentPosition != null ? currentPosition : DEFAULT_POSITION;
+        GetJsonAsync.GetMapSearchDataWithConditions(keyword, new MapPostionVO(pos.getLatitude(), pos.getLongitude()), "10000", callback);
     }
 
     // 마커를 그립니다(테스트용)

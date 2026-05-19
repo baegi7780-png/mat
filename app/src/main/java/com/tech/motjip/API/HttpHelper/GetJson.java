@@ -27,6 +27,7 @@ public class GetJson {
     public static List<KeywordMapVO> GetMapSearchData(String query) throws KakaoRestException{
         Map<String, String> hashQuery = new HashMap<String, String>();
         hashQuery.put("query", query);
+        hashQuery.put("category_group_code", "FD6"); // 음식점만 검색가능 코드
 
         return GetMapSearchData(hashQuery);
     }

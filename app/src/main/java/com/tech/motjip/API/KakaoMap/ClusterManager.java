@@ -2,11 +2,8 @@ package com.tech.motjip.API.KakaoMap;
 
 import com.kakao.vectormap.KakaoMap;
 import com.kakao.vectormap.LatLng;
-import com.kakao.vectormap.label.CompetitionType;
-import com.kakao.vectormap.label.CompetitionUnit;
 import com.kakao.vectormap.label.Label;
 import com.kakao.vectormap.label.LabelLayer;
-import com.kakao.vectormap.label.LabelLayerOptions;
 import com.kakao.vectormap.label.LabelOptions;
 import com.kakao.vectormap.label.LabelStyles;
 import com.kakao.vectormap.label.LabelTextBuilder;
@@ -22,8 +19,6 @@ import java.util.Map;
 // 마커 클러스터링 매니저 (Grid-based)
 // 줌 레벨에 따라 격자 크기를 조정하여 가까운 마커들을 묶어 표시합니다.
 public class ClusterManager {
-
-    private static final String LAYER_NAME = "MyClusterLayer";
 
     private final KakaoMap kakaoMap;
     private final LabelStyles markerStyle;   // 일반 마커 스타일
@@ -126,16 +121,8 @@ public class ClusterManager {
         return (row << 32) | (col & 0xFFFFFFFFL);
     }
 
-    // 레이어 가져오기 (없으면 생성)
+    // 기본 레이어를 가져옵니다 (텍스트 위치가 기본 레이어 기준으로 정상 렌더링됨)
     private LabelLayer getOrCreateLayer() {
-        LabelLayer layer = kakaoMap.getLabelManager().getLayer(LAYER_NAME);
-        if (layer == null) {
-            LabelLayerOptions options = LabelLayerOptions.from(LAYER_NAME)
-                    .setCompetitionType(CompetitionType.SameLower)
-                    .setCompetitionUnit(CompetitionUnit.IconAndText)
-                    .setZOrder(10001);
-            layer = kakaoMap.getLabelManager().addLayer(options);
-        }
-        return layer;
+        return kakaoMap.getLabelManager().getLayer();
     }
 }
