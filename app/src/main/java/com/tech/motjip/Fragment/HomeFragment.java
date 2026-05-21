@@ -383,8 +383,18 @@ public class HomeFragment extends Fragment implements IViewDetailItemClickCallba
             public void ThreadEnds(PlaceDetailVO detail) {
                 if (!isAdded()) return; // Fragment 살아있는지 검증
                 requireActivity().runOnUiThread(() -> {
-                    tvHomeStatus.setText(detail.getOpenDisplay() + " · " + detail.getOpenTimeText());
-                    tvHomePhone.setText(detail.getPhoneNumber());
+                    if (detail.getOpenDisplay() != null) {
+                        tvHomeStatus.setText(detail.getOpenDisplay() + " · " + detail.getOpenTimeText());
+                        tvHomeStatus.setVisibility(View.VISIBLE);
+                    } else {
+                        tvHomeStatus.setVisibility(View.GONE);
+                    }
+                    if (detail.getPhoneNumber() != null) {
+                        tvHomePhone.setText(detail.getPhoneNumber());
+                        tvHomePhone.setVisibility(View.VISIBLE);
+                    } else {
+                        tvHomePhone.setVisibility(View.GONE);
+                    }
 
                     // 메뉴 탭 채우기 (동적 추가)
                     llMenuContainer.removeAllViews();
