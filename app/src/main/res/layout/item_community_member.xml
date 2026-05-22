@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="165dp"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_card_round"
+    android:elevation="2dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="18dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="18dp"
+    android:paddingBottom="16dp">
+
+    <ImageView
+        android:id="@+id/ivProfile"
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:background="@drawable/bg_profile_circle"
+        android:scaleType="centerCrop"
+        android:src="@drawable/default_profile" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="18dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvNickname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="닉네임"
+            android:textColor="#1A1A1A"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvRole"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="모임장"
+            android:textColor="#F59D31"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutButtons"
+        android:layout_width="112dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btnChat"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:backgroundTint="#F59D31"
+            android:text="1:1 채팅"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnFriend"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:layout_marginTop="7dp"
+            android:backgroundTint="#FFF3E0"
+            android:text="친구 추가"
+            android:textAllCaps="false"
+            android:textColor="#F59D31"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnKick"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:layout_marginTop="7dp"
+            android:backgroundTint="#E53935"
+            android:text="추방"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -10,12 +10,10 @@
     android:paddingStart="24dp"
     android:paddingEnd="24dp">
 
-    <!-- 상단 여백 -->
     <Space
         android:layout_width="match_parent"
         android:layout_height="48dp" />
 
-    <!-- 헤더 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
@@ -46,7 +44,6 @@
 
     </LinearLayout>
 
-    <!-- 스크롤 -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -59,7 +56,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 태그 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -75,7 +71,6 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_write_input" />
 
-            <!-- 지역 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -92,7 +87,6 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_write_input" />
 
-            <!-- 제목 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -109,13 +103,26 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_write_input"
                 android:hint="제목을 입력해 주세요"
+                android:maxLength="25"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="#111111"
                 android:textColorHint="#999999"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:singleLine="true"
+                android:inputType="text"
+                android:imeOptions="actionNext" />
 
-            <!-- 상세주소 -->
+            <TextView
+                android:id="@+id/tvTitleCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="end"
+                android:text="0 / 25"
+                android:textColor="#999999"
+                android:textSize="12sp" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -136,9 +143,11 @@
                 android:paddingEnd="16dp"
                 android:textColor="#111111"
                 android:textColorHint="#999999"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:singleLine="true"
+                android:inputType="textPostalAddress"
+                android:imeOptions="actionNext" />
 
-            <!-- 날짜 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -163,7 +172,6 @@
                 android:focusable="false"
                 android:clickable="true" />
 
-            <!-- 내용 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -181,12 +189,24 @@
                 android:background="@drawable/bg_write_input"
                 android:gravity="top"
                 android:hint="내용 입력해 주세요"
+                android:maxLength="500"
                 android:padding="16dp"
                 android:textColor="#111111"
                 android:textColorHint="#999999"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:inputType="textMultiLine"
+                android:imeOptions="actionDone" />
 
-            <!-- 첨부파일 -->
+            <TextView
+                android:id="@+id/tvContentCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="end"
+                android:text="0 / 500"
+                android:textColor="#999999"
+                android:textSize="12sp" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -203,15 +223,30 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <!-- 이미지 미리보기 -->
-                <ImageView
-                    android:id="@+id/imgPreview"
+                <FrameLayout
                     android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/chef_illustration" />
+                    android:layout_height="72dp">
 
-                <!-- 파일 정보 -->
+                    <ImageView
+                        android:id="@+id/imgPreview"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/chef_illustration" />
+
+                    <ImageButton
+                        android:id="@+id/btnRemoveImage"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_gravity="top|end"
+                        android:background="#CC000000"
+                        android:padding="4dp"
+                        android:src="@android:drawable/ic_menu_close_clear_cancel"
+                        android:visibility="gone"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -219,7 +254,6 @@
                     android:layout_marginStart="12dp"
                     android:orientation="vertical">
 
-                    <!-- 파일명 -->
                     <TextView
                         android:id="@+id/tvFileName"
                         android:layout_width="wrap_content"
@@ -229,7 +263,6 @@
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
-                    <!-- 용량 -->
                     <TextView
                         android:id="@+id/tvFileSize"
                         android:layout_width="wrap_content"
@@ -241,7 +274,6 @@
 
                 </LinearLayout>
 
-                <!-- 이미지 추가 버튼 -->
                 <Button
                     android:id="@+id/btnAddImage"
                     android:layout_width="140dp"
@@ -255,7 +287,6 @@
 
             </LinearLayout>
 
-            <!-- 하단 여백 -->
             <Space
                 android:layout_width="match_parent"
                 android:layout_height="20dp" />
@@ -264,7 +295,6 @@
 
     </ScrollView>
 
-    <!-- 하단 버튼 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -273,7 +303,6 @@
         android:orientation="horizontal"
         android:paddingTop="8dp">
 
-        <!-- 등록 -->
         <Button
             android:id="@+id/btnUpload"
             android:layout_width="0dp"
@@ -286,7 +315,13 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <!-- 취소 -->
+        <ProgressBar
+            android:id="@+id/progressUpload"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="12dp"
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/btnCancel"
             android:layout_width="110dp"

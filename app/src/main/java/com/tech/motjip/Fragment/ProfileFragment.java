@@ -23,7 +23,9 @@ import com.tech.motjip.Dto.ResponseDto.LoginResponseDto;
 import com.tech.motjip.FavoriteActivity;
 import com.tech.motjip.FriendActivity;
 import com.tech.motjip.MainActivity;
+import com.tech.motjip.MyCommunityManageActivity;
 import com.tech.motjip.MyInfoActivity;
+import com.tech.motjip.NotificationActivity;
 import com.tech.motjip.Handler.PreferenceManager;
 import com.tech.motjip.R;
 
@@ -42,8 +44,14 @@ public class ProfileFragment extends Fragment {
 
     private LinearLayout btnFavorite;
     private LinearLayout btnFriend;
+    private LinearLayout btnMyCommunity;
+    private LinearLayout btnNotification;
 
     private ImageButton btnSettings;
+
+    private Call<LoginResponseDto> currentUserCall;
+
+    private boolean isLoadingMyInfo = false;
 
     private static final String PREF_NAME = "AppPrefs";
 
@@ -55,6 +63,18 @@ public class ProfileFragment extends Fragment {
 
     private static final String LOGIN_STATUS =
             "LOGIN_STATUS";
+
+    private static final String CACHED_EMAIL =
+            "CACHED_EMAIL";
+
+    private static final String CACHED_NICKNAME =
+            "CACHED_NICKNAME";
+
+    private static final String CACHED_PROFILE_IMG_URL =
+            "CACHED_PROFILE_IMG_URL";
+
+    private static final String BASE_IMAGE_URL =
+            "https://spout-distant-cost.ngrok-free.dev";
 
     public ProfileFragment() {
     }
@@ -100,8 +120,16 @@ public class ProfileFragment extends Fragment {
         btnFriend =
                 view.findViewById(R.id.btnFriend);
 
+        btnMyCommunity =
+                view.findViewById(R.id.btnMyCommunity);
+
+        btnNotification =
+                view.findViewById(R.id.btnNotification);
+
         btnSettings =
                 view.findViewById(R.id.btnSettings);
+
+        loadCachedMyInfo();
 
         btnLogout.setOnClickListener(v -> logout());
 
@@ -137,6 +165,28 @@ public class ProfileFragment extends Fragment {
 
             startActivity(intent);
         });
+
+        btnMyCommunity.setOnClickListener(v -> {
+
+            Intent intent =
+                    new Intent(
+                            requireContext(),
+                            MyCommunityManageActivity.class
+                    );
+
+            startActivity(intent);
+        });
+
+        btnNotification.setOnClickListener(v -> {
+
+            Intent intent =
+                    new Intent(
+                            requireContext(),
+                            NotificationActivity.class
+                    );
+
+            startActivity(intent);
+        });
     }
 
     @Override
@@ -147,91 +197,264 @@ public class ProfileFragment extends Fragment {
         loadMyInfo();
     }
 
+    @Override
+    public void onDestroyView() {
+
+        super.onDestroyView();
+
+        if (currentUserCall != null) {
+
+            currentUserCall.cancel();
+
+            currentUserCall =
+                    null;
+        }
+
+        isLoadingMyInfo =
+                false;
+    }
+
+    private void loadCachedMyInfo() {
+
+        if (!isAdded()
+                || getContext() == null) {
+
+            return;
+        }
+
+        SharedPreferences preferences =
+                requireActivity().getSharedPreferences(
+                        PREF_NAME,
+                        requireActivity().MODE_PRIVATE
+                );
+
+        String cachedEmail =
+                preferences.getString(
+                        CACHED_EMAIL,
+                        null
+                );
+
+        String cachedNickname =
+                preferences.getString(
+                        CACHED_NICKNAME,
+                        null
+                );
+
+        String cachedProfileImgUrl =
+                preferences.getString(
+                        CACHED_PROFILE_IMG_URL,
+                        null
+                );
+
+        tvEmail.setText(
+                cachedEmail != null
+                        && !cachedEmail.isEmpty()
+                        ? cachedEmail
+                        : "조회된 계정"
+        );
+
+        tvNickname.setText(
+                cachedNickname != null
+                        && !cachedNickname.isEmpty()
+                        ? cachedNickname
+                        : "미설정"
+        );
+
+        loadProfileImage(
+                cachedProfileImgUrl
+        );
+    }
+
     private void loadMyInfo() {
-        RetrofitClient.getApiService(requireContext())
-                .getCurrentUser()
-                .enqueue(new Callback<LoginResponseDto>() {
 
-                    @Override
-                    public void onResponse(
-                            Call<LoginResponseDto> call,
-                            Response<LoginResponseDto> response
-                    ) {
-                        // Fragment 상태 확인
-                        if (!isAdded() || getContext() == null || getView() == null) {
-                            return;
-                        }
+        if (isLoadingMyInfo) {
 
-                        if (response.isSuccessful() && response.body() != null) {
-                            LoginResponseDto user = response.body();
-                            String email = user.getEmail();
-                            String nickname = user.getNickname();
-                            String profileImgUrl = user.getProfileImgUrl();
+            return;
+        }
 
-                            // 🚀 [여기에 추가!] 서버에서 가져온 새 계정 정보를 PreferenceManager에 저장합니다.
-                            // 혹시 프로젝트 내부의 저장 함수명이 put이 아니라 save 등으로 다르면 그 이름에 맞춰주세요!
-                            if (email != null) {
-                                PreferenceManager.saveUserEmail(requireContext(), email);
-                            }
-                            if (nickname != null) {
-                                PreferenceManager.saveNickname(requireContext(), nickname);
-                            }
+        isLoadingMyInfo =
+                true;
 
-                            // 기존 화면 세팅 코드들
-                            tvEmail.setText(
-                                    email != null && !email.isEmpty()
-                                            ? email
-                                            : "조회된 계정"
-                            );
+        currentUserCall =
+                RetrofitClient.getApiService(requireContext())
+                        .getCurrentUser();
 
-                            tvNickname.setText(
-                                    nickname != null && !nickname.isEmpty()
-                                            ? nickname
-                                            : "미설정"
-                            );
+        currentUserCall.enqueue(new Callback<LoginResponseDto>() {
 
-                            if (profileImgUrl != null && !profileImgUrl.isEmpty()) {
-                                String imageUrl =
-                                        "https://spout-distant-cost.ngrok-free.dev"
-                                                + profileImgUrl;
+            @Override
+            public void onResponse(
+                    Call<LoginResponseDto> call,
+                    Response<LoginResponseDto> response
+            ) {
 
-                                Glide.with(ProfileFragment.this)
-                                        .load(imageUrl)
-                                        .placeholder(R.drawable.default_profile)
-                                        .error(R.drawable.default_profile)
-                                        .into(ivProfileImage);
+                isLoadingMyInfo =
+                        false;
 
-                            } else {
-                                ivProfileImage.setImageResource(
-                                        R.drawable.default_profile
-                                );
-                            }
+                if (!isAdded()
+                        || getContext() == null
+                        || getView() == null) {
 
-                        } else {
-                            tvEmail.setText("조회 실패");
-                            tvNickname.setText("조회 실패");
-                        }
+                    return;
+                }
+
+                if (response.isSuccessful()
+                        && response.body() != null) {
+
+                    LoginResponseDto user =
+                            response.body();
+
+                    String email =
+                            user.getEmail();
+
+                    String nickname =
+                            user.getNickname();
+
+                    String profileImgUrl =
+                            user.getProfileImgUrl();
+
+                    saveMyInfoCache(
+                            email,
+                            nickname,
+                            profileImgUrl
+                    );
+
+                    if (email != null) {
+
+                        PreferenceManager.saveUserEmail(
+                                requireContext(),
+                                email
+                        );
                     }
 
-                    @Override
-                    public void onFailure(
-                            Call<LoginResponseDto> call,
-                            Throwable t
-                    ) {
+                    if (nickname != null) {
 
-                        // Fragment 상태 확인
-                        if (!isAdded()
-                                || getContext() == null
-                                || getView() == null) {
-
-                            return;
-                        }
-
-                        tvEmail.setText("서버 오류");
-
-                        tvNickname.setText("서버 오류");
+                        PreferenceManager.saveNickname(
+                                requireContext(),
+                                nickname
+                        );
                     }
-                });
+
+                    tvEmail.setText(
+                            email != null
+                                    && !email.isEmpty()
+                                    ? email
+                                    : "조회된 계정"
+                    );
+
+                    tvNickname.setText(
+                            nickname != null
+                                    && !nickname.isEmpty()
+                                    ? nickname
+                                    : "미설정"
+                    );
+
+                    loadProfileImage(
+                            profileImgUrl
+                    );
+
+                } else {
+
+                    loadCachedMyInfo();
+                }
+            }
+
+            @Override
+            public void onFailure(
+                    Call<LoginResponseDto> call,
+                    Throwable t
+            ) {
+
+                isLoadingMyInfo =
+                        false;
+
+                if (call.isCanceled()) {
+
+                    return;
+                }
+
+                if (!isAdded()
+                        || getContext() == null
+                        || getView() == null) {
+
+                    return;
+                }
+
+                loadCachedMyInfo();
+            }
+        });
+    }
+
+    private void saveMyInfoCache(
+            String email,
+            String nickname,
+            String profileImgUrl
+    ) {
+
+        SharedPreferences preferences =
+                requireActivity().getSharedPreferences(
+                        PREF_NAME,
+                        requireActivity().MODE_PRIVATE
+                );
+
+        SharedPreferences.Editor editor =
+                preferences.edit();
+
+        if (email != null) {
+
+            editor.putString(
+                    CACHED_EMAIL,
+                    email
+            );
+        }
+
+        if (nickname != null) {
+
+            editor.putString(
+                    CACHED_NICKNAME,
+                    nickname
+            );
+        }
+
+        if (profileImgUrl != null) {
+
+            editor.putString(
+                    CACHED_PROFILE_IMG_URL,
+                    profileImgUrl
+            );
+        }
+
+        editor.apply();
+    }
+
+    private void loadProfileImage(
+            String profileImgUrl
+    ) {
+
+        if (!isAdded()
+                || getContext() == null) {
+
+            return;
+        }
+
+        if (profileImgUrl != null
+                && !profileImgUrl.isEmpty()) {
+
+            String imageUrl =
+                    BASE_IMAGE_URL
+                            + profileImgUrl;
+
+            Glide.with(ProfileFragment.this)
+                    .load(imageUrl)
+                    .placeholder(R.drawable.default_profile)
+                    .error(R.drawable.default_profile)
+                    .into(ivProfileImage);
+
+        } else {
+
+            ivProfileImage.setImageResource(
+                    R.drawable.default_profile
+            );
+        }
     }
 
     private void logout() {
@@ -294,6 +517,9 @@ public class ProfileFragment extends Fragment {
         preferences.edit()
                 .remove(ACCESS_TOKEN)
                 .remove(REFRESH_TOKEN)
+                .remove(CACHED_EMAIL)
+                .remove(CACHED_NICKNAME)
+                .remove(CACHED_PROFILE_IMG_URL)
                 .putInt(LOGIN_STATUS, 0)
                 .apply();
 

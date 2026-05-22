@@ -1,88 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
-
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#faf8f2">
 
-    android:orientation="vertical"
-
-    android:padding="24dp"
-
-    android:background="#F7F7F7">
-
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="24dp">
 
-        android:layout_marginTop="18dp"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="24dp"
+            android:text="내 정보 수정"
+            android:textColor="#111111"
+            android:textSize="34sp"
+            android:textStyle="bold" />
 
-        android:text="내 정보 수정"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/bg_card_round"
+            android:elevation="2dp"
+            android:orientation="vertical"
+            android:padding="8dp">
 
-        android:textSize="28sp"
+            <Button
+                android:id="@+id/btnEditNickname"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@android:color/transparent"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="닉네임 수정"
+                android:textAllCaps="false"
+                android:textColor="#111111"
+                android:textSize="15sp" />
 
-        android:textStyle="bold"
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:background="#EEEEEE" />
 
-        android:textColor="#111111"
+            <Button
+                android:id="@+id/btnEditProfileImage"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@android:color/transparent"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="프로필 이미지 수정"
+                android:textAllCaps="false"
+                android:textColor="#111111"
+                android:textSize="15sp" />
 
-        android:layout_marginBottom="32dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:background="#EEEEEE" />
 
-    <Button
-        android:id="@+id/btnEditNickname"
+            <Button
+                android:id="@+id/btnMyStatusSetting"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@android:color/transparent"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="내 상태 관리"
+                android:textAllCaps="false"
+                android:textColor="#111111"
+                android:textSize="15sp" />
 
-        android:layout_width="match_parent"
+        </LinearLayout>
 
-        android:layout_height="56dp"
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginBottom="14dp"
+            android:backgroundTint="#FF3B30"
+            android:text="로그아웃"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-        android:text="닉네임 수정"
+        <Button
+            android:id="@+id/btnDeleteAccount"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:backgroundTint="#D93025"
+            android:text="회원탈퇴"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-        android:textAllCaps="false"
+    </LinearLayout>
 
-        android:layout_marginBottom="16dp" />
-
-    <Button
-        android:id="@+id/btnEditProfileImage"
-
-        android:layout_width="match_parent"
-
-        android:layout_height="56dp"
-
-        android:text="프로필 이미지 수정"
-
-        android:textAllCaps="false"
-
-        android:layout_marginBottom="16dp" />
-    <Button
-        android:id="@+id/btnLogout"
-
-        android:layout_width="match_parent"
-
-        android:layout_height="56dp"
-
-        android:text="로그아웃"
-
-        android:textAllCaps="false"
-
-        android:layout_marginBottom="16dp"
-
-        android:backgroundTint="#FF3B30"
-
-        android:textColor="#FFFFFF" />
-
-    <Button
-        android:id="@+id/btnDeleteAccount"
-
-        android:layout_width="match_parent"
-
-        android:layout_height="56dp"
-
-        android:text="회원탈퇴"
-
-        android:textAllCaps="false"
-
-        android:backgroundTint="#FF3B30"
-
-        android:textColor="#FFFFFF" />
-
-</LinearLayout>
+</ScrollView>

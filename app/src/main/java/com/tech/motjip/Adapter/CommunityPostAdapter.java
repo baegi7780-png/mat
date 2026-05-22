@@ -40,24 +40,37 @@ public class CommunityPostAdapter
         void onPostClick(CommunityPost post);
     }
 
+    public interface OnPostMenuClickListener {
+
+        void onEditClick(CommunityPost post);
+
+        void onDeleteClick(CommunityPost post, int position);
+    }
+
     private final Context context;
 
     private final FavoriteController favoriteController;
 
     private final OnPostClickListener onPostClickListener;
 
+    private final OnPostMenuClickListener onPostMenuClickListener;
+
     private final List<CommunityPost> postList =
             new ArrayList<>();
 
     public CommunityPostAdapter(
             Context context,
-            OnPostClickListener onPostClickListener
+            OnPostClickListener onPostClickListener,
+            OnPostMenuClickListener onPostMenuClickListener
     ) {
 
         this.context = context;
 
         this.onPostClickListener =
                 onPostClickListener;
+
+        this.onPostMenuClickListener =
+                onPostMenuClickListener;
 
         this.favoriteController =
                 new FavoriteController(context);
@@ -80,6 +93,34 @@ public class CommunityPostAdapter
         notifyItemRangeInserted(
                 startPosition,
                 posts.size()
+        );
+    }
+
+    public void setPosts(List<CommunityPost> posts) {
+
+        postList.clear();
+
+        if (posts != null) {
+
+            postList.addAll(posts);
+        }
+
+        notifyDataSetChanged();
+    }
+
+    public void removePost(int position) {
+
+        if (position < 0 || position >= postList.size()) {
+            return;
+        }
+
+        postList.remove(position);
+
+        notifyItemRemoved(position);
+
+        notifyItemRangeChanged(
+                position,
+                postList.size()
         );
     }
 
@@ -128,6 +169,29 @@ public class CommunityPostAdapter
                 post.getMeetingAt()
         );
 
+        holder.tvMemberCount.setText(
+                "참여 "
+                        + post.getMemberCount()
+                        + "명"
+        );
+
+        if (post.isClosed()) {
+
+            holder.tvClosedBadge.setVisibility(
+                    View.VISIBLE
+            );
+
+            holder.itemView.setAlpha(0.55f);
+
+        } else {
+
+            holder.tvClosedBadge.setVisibility(
+                    View.GONE
+            );
+
+            holder.itemView.setAlpha(1f);
+        }
+
         if (post.isMine()) {
 
             holder.ivFavorite.setVisibility(
@@ -140,25 +204,38 @@ public class CommunityPostAdapter
 
         } else {
 
-            holder.ivFavorite.setVisibility(
-                    View.VISIBLE
-            );
+            if (post.isClosed()) {
 
-            holder.ivMore.setVisibility(
-                    View.GONE
-            );
+                holder.ivFavorite.setVisibility(
+                        View.GONE
+                );
 
-            if (post.isFavorite()) {
-
-                holder.ivFavorite.setColorFilter(
-                        Color.parseColor("#FF9800")
+                holder.ivMore.setVisibility(
+                        View.VISIBLE
                 );
 
             } else {
 
-                holder.ivFavorite.setColorFilter(
-                        Color.parseColor("#BBBBBB")
+                holder.ivFavorite.setVisibility(
+                        View.VISIBLE
                 );
+
+                holder.ivMore.setVisibility(
+                        View.GONE
+                );
+
+                if (post.isFavorite()) {
+
+                    holder.ivFavorite.setColorFilter(
+                            Color.parseColor("#FF9800")
+                    );
+
+                } else {
+
+                    holder.ivFavorite.setColorFilter(
+                            Color.parseColor("#BBBBBB")
+                    );
+                }
             }
         }
 
@@ -236,103 +313,77 @@ public class CommunityPostAdapter
                 return;
             }
 
-            boolean currentFavoriteState =
-                    post.isFavorite();
+            favoriteController.toggleFavoriteCommunityPost(
+                    post.getComId(),
+                    new Callback<Boolean>() {
 
-            String message;
+                        @Override
+                        public void onResponse(
+                                Call<Boolean> call,
+                                Response<Boolean> response
+                        ) {
 
-            if (currentFavoriteState) {
+                            if (response.isSuccessful()
+                                    && response.body() != null) {
 
-                message = "즐겨찾기를 취소하시겠습니까?";
+                                boolean isFavorite =
+                                        response.body();
 
-            } else {
-
-                message = "즐겨찾기를 추가하시겠습니까?";
-            }
-
-            new AlertDialog.Builder(context)
-                    .setMessage(message)
-                    .setNegativeButton("취소", null)
-                    .setPositiveButton(
-                            "확인",
-                            (dialog, which) -> {
-
-                                favoriteController.toggleFavoriteCommunityPost(
-                                        post.getComId(),
-                                        new Callback<Boolean>() {
-
-                                            @Override
-                                            public void onResponse(
-                                                    Call<Boolean> call,
-                                                    Response<Boolean> response
-                                            ) {
-
-                                                if (
-                                                        response.isSuccessful()
-                                                                && response.body() != null
-                                                ) {
-
-                                                    boolean isFavorite =
-                                                            response.body();
-
-                                                    post.setFavorite(
-                                                            isFavorite
-                                                    );
-
-                                                    if (isFavorite) {
-
-                                                        holder.ivFavorite.setColorFilter(
-                                                                Color.parseColor("#FF9800")
-                                                        );
-
-                                                        Toast.makeText(
-                                                                context,
-                                                                "즐겨찾기에 추가되었습니다.",
-                                                                Toast.LENGTH_SHORT
-                                                        ).show();
-
-                                                    } else {
-
-                                                        holder.ivFavorite.setColorFilter(
-                                                                Color.parseColor("#BBBBBB")
-                                                        );
-
-                                                        Toast.makeText(
-                                                                context,
-                                                                "즐겨찾기가 취소되었습니다.",
-                                                                Toast.LENGTH_SHORT
-                                                        ).show();
-                                                    }
-
-                                                } else {
-
-                                                    Toast.makeText(
-                                                            context,
-                                                            "즐겨찾기 처리 실패: "
-                                                                    + response.code(),
-                                                            Toast.LENGTH_SHORT
-                                                    ).show();
-                                                }
-                                            }
-
-                                            @Override
-                                            public void onFailure(
-                                                    Call<Boolean> call,
-                                                    Throwable t
-                                            ) {
-
-                                                Toast.makeText(
-                                                        context,
-                                                        "서버 연결 실패: "
-                                                                + t.getMessage(),
-                                                        Toast.LENGTH_SHORT
-                                                ).show();
-                                            }
-                                        }
+                                post.setFavorite(
+                                        isFavorite
                                 );
+
+                                if (isFavorite) {
+
+                                    holder.ivFavorite.setColorFilter(
+                                            Color.parseColor("#FF9800")
+                                    );
+
+                                    Toast.makeText(
+                                            context,
+                                            "즐겨찾기에 추가되었습니다.",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+
+                                } else {
+
+                                    holder.ivFavorite.setColorFilter(
+                                            Color.parseColor("#BBBBBB")
+                                    );
+
+                                    Toast.makeText(
+                                            context,
+                                            "즐겨찾기가 취소되었습니다.",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+
+                            } else {
+
+                                Toast.makeText(
+                                        context,
+                                        "즐겨찾기 처리 실패: "
+                                                + response.code(),
+                                        Toast.LENGTH_SHORT
+                                ).show();
                             }
-                    )
-                    .show();
+                        }
+
+                        @Override
+                        public void onFailure(
+                                Call<Boolean> call,
+                                Throwable t
+                        ) {
+
+                            Toast.makeText(
+                                    context,
+                                    "서버 연결 실패: "
+                                            + t.getMessage(),
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                    }
+            );
         });
 
         holder.ivMore.setOnClickListener(v -> {
@@ -343,34 +394,64 @@ public class CommunityPostAdapter
                             holder.ivMore
                     );
 
-            popupMenu.getMenu().add(
-                    "수정하기"
-            );
+            if (post.isClosed()) {
 
-            popupMenu.getMenu().add(
-                    "삭제하기"
-            );
+                popupMenu.getMenu().add(
+                        "삭제하기"
+                );
+
+            } else if (post.isMine()) {
+
+                popupMenu.getMenu().add(
+                        "수정하기"
+                );
+
+                popupMenu.getMenu().add(
+                        "삭제하기"
+                );
+            }
 
             popupMenu.setOnMenuItemClickListener(item -> {
 
                 String title =
                         item.getTitle().toString();
 
+                int currentPosition =
+                        holder.getAdapterPosition();
+
+                if (currentPosition == RecyclerView.NO_POSITION) {
+                    return true;
+                }
+
                 if (title.equals("수정하기")) {
 
-                    Toast.makeText(
-                            context,
-                            "수정하기 클릭",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                    if (onPostMenuClickListener != null) {
+
+                        onPostMenuClickListener.onEditClick(
+                                post
+                        );
+                    }
 
                 } else if (title.equals("삭제하기")) {
 
-                    Toast.makeText(
-                            context,
-                            "삭제하기 클릭",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                    new AlertDialog.Builder(context)
+                            .setTitle("삭제")
+                            .setMessage("정말 삭제하시겠습니까?")
+                            .setNegativeButton("취소", null)
+                            .setPositiveButton(
+                                    "삭제",
+                                    (dialog, which) -> {
+
+                                        if (onPostMenuClickListener != null) {
+
+                                            onPostMenuClickListener.onDeleteClick(
+                                                    post,
+                                                    currentPosition
+                                            );
+                                        }
+                                    }
+                            )
+                            .show();
                 }
 
                 return true;
@@ -383,7 +464,9 @@ public class CommunityPostAdapter
 
             if (onPostClickListener != null) {
 
-                onPostClickListener.onPostClick(post);
+                onPostClickListener.onPostClick(
+                        post
+                );
             }
         });
     }
@@ -403,6 +486,8 @@ public class CommunityPostAdapter
         TextView tvTagRegion;
         TextView tvPlace;
         TextView tvDate;
+        TextView tvMemberCount;
+        TextView tvClosedBadge;
 
         ImageView ivFavorite;
 
@@ -434,6 +519,16 @@ public class CommunityPostAdapter
             tvDate =
                     itemView.findViewById(
                             R.id.tvDate
+                    );
+
+            tvMemberCount =
+                    itemView.findViewById(
+                            R.id.tvMemberCount
+                    );
+
+            tvClosedBadge =
+                    itemView.findViewById(
+                            R.id.tvClosedBadge
                     );
 
             ivFavorite =

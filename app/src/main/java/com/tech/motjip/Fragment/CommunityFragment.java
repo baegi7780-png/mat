@@ -20,7 +20,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,6 +31,7 @@ import com.tech.motjip.Model.CommunityPost;
 import com.tech.motjip.R;
 import com.tech.motjip.WriteActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CommunityFragment extends Fragment {
@@ -50,8 +50,6 @@ public class CommunityFragment extends Fragment {
 
     private TextView tvLocation;
     private TextView tvShowAll;
-
-    private NestedScrollView nestedScrollView;
 
     private RecyclerView recyclerViewPosts;
 
@@ -92,10 +90,8 @@ public class CommunityFragment extends Fragment {
 
                                 resetFilterToDefault();
 
-                                if (nestedScrollView != null) {
-                                    nestedScrollView.post(() ->
-                                            nestedScrollView.smoothScrollTo(0, 0)
-                                    );
+                                if (recyclerViewPosts != null) {
+                                    recyclerViewPosts.scrollToPosition(0);
                                 }
 
                                 resetPagingAndLoad();
@@ -161,15 +157,13 @@ public class CommunityFragment extends Fragment {
         btnCafe =
                 view.findViewById(R.id.btnCafe);
 
-        nestedScrollView =
-                view.findViewById(R.id.nestedScrollView);
-
         recyclerViewPosts =
                 view.findViewById(R.id.recyclerViewPosts);
 
         adapter =
                 new CommunityPostAdapter(
                         requireContext(),
+
                         post -> {
 
                             Intent intent =
@@ -184,6 +178,70 @@ public class CommunityFragment extends Fragment {
                             );
 
                             detailActivityLauncher.launch(intent);
+                        },
+
+                        new CommunityPostAdapter.OnPostMenuClickListener() {
+
+                            @Override
+                            public void onEditClick(
+                                    CommunityPost post
+                            ) {
+
+                                Intent intent =
+                                        new Intent(
+                                                requireContext(),
+                                                WriteActivity.class
+                                        );
+
+                                intent.putExtra(
+                                        "isEditMode",
+                                        true
+                                );
+
+                                intent.putExtra(
+                                        "communityPost",
+                                        post
+                                );
+
+                                writeActivityLauncher.launch(intent);
+                            }
+
+                            @Override
+                            public void onDeleteClick(
+                                    CommunityPost post,
+                                    int position
+                            ) {
+
+                                communityController.deleteCommunityPost(
+                                        post.getComId(),
+                                        new CommunityController.DeleteCommunityCallback() {
+
+                                            @Override
+                                            public void onSuccess() {
+
+                                                adapter.removePost(position);
+
+                                                Toast.makeText(
+                                                        requireContext(),
+                                                        "게시글이 삭제되었습니다.",
+                                                        Toast.LENGTH_SHORT
+                                                ).show();
+                                            }
+
+                                            @Override
+                                            public void onError(
+                                                    String message
+                                            ) {
+
+                                                Toast.makeText(
+                                                        requireContext(),
+                                                        message,
+                                                        Toast.LENGTH_SHORT
+                                                ).show();
+                                            }
+                                        }
+                                );
+                            }
                         }
                 );
 
@@ -479,7 +537,18 @@ public class CommunityFragment extends Fragment {
 
                         adapter.clearPosts();
 
-                        adapter.addPosts(posts);
+                        List<CommunityPost> activePosts =
+                                new ArrayList<>();
+
+                        for (CommunityPost post : posts) {
+
+                            if (!post.isClosed()) {
+
+                                activePosts.add(post);
+                            }
+                        }
+
+                        adapter.addPosts(activePosts);
                     }
 
                     @Override
@@ -511,50 +580,83 @@ public class CommunityFragment extends Fragment {
 
     private void setupRecyclerViewPagination() {
 
-        nestedScrollView.setOnScrollChangeListener(
-                (
-                        View v,
-                        int scrollX,
-                        int scrollY,
-                        int oldScrollX,
-                        int oldScrollY
-                ) -> {
+        recyclerViewPosts.addOnScrollListener(
+                new RecyclerView.OnScrollListener() {
 
-                    if (!nestedScrollView.canScrollVertically(1)) {
-
-                        communityController.loadNextPage(
-                                selectedTitle,
-                                selectedTag,
-                                selectedRegion,
-                                selectedSort,
-                                new CommunityController.CommunityCallback() {
-
-                                    @Override
-                                    public void onSuccess(
-                                            List<CommunityPost> posts,
-                                            boolean isLastPage
-                                    ) {
-
-                                        adapter.addPosts(posts);
-                                    }
-
-                                    @Override
-                                    public void onEmpty() {
-                                    }
-
-                                    @Override
-                                    public void onError(
-                                            String message
-                                    ) {
-
-                                        Toast.makeText(
-                                                getContext(),
-                                                message,
-                                                Toast.LENGTH_SHORT
-                                        ).show();
-                                    }
-                                }
+                    @Override
+                    public void onScrolled(
+                            @NonNull RecyclerView recyclerView,
+                            int dx,
+                            int dy
+                    ) {
+                        super.onScrolled(
+                                recyclerView,
+                                dx,
+                                dy
                         );
+
+                        LinearLayoutManager layoutManager =
+                                (LinearLayoutManager)
+                                        recyclerView.getLayoutManager();
+
+                        if (layoutManager == null) {
+                            return;
+                        }
+
+                        int lastVisiblePosition =
+                                layoutManager.findLastVisibleItemPosition();
+
+                        int totalItemCount =
+                                layoutManager.getItemCount();
+
+                        if (lastVisiblePosition
+                                >= totalItemCount - 3) {
+
+                            communityController.loadNextPage(
+                                    selectedTitle,
+                                    selectedTag,
+                                    selectedRegion,
+                                    selectedSort,
+                                    new CommunityController.CommunityCallback() {
+
+                                        @Override
+                                        public void onSuccess(
+                                                List<CommunityPost> posts,
+                                                boolean isLastPage
+                                        ) {
+
+                                            List<CommunityPost> activePosts =
+                                                    new ArrayList<>();
+
+                                            for (CommunityPost post : posts) {
+
+                                                if (!post.isClosed()) {
+
+                                                    activePosts.add(post);
+                                                }
+                                            }
+
+                                            adapter.addPosts(activePosts);
+                                        }
+
+                                        @Override
+                                        public void onEmpty() {
+                                        }
+
+                                        @Override
+                                        public void onError(
+                                                String message
+                                        ) {
+
+                                            Toast.makeText(
+                                                    getContext(),
+                                                    message,
+                                                    Toast.LENGTH_SHORT
+                                            ).show();
+                                        }
+                                    }
+                            );
+                        }
                     }
                 }
         );

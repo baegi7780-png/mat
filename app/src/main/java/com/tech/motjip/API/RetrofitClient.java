@@ -10,6 +10,7 @@ import com.tech.motjip.Dto.ResponseDto.TokenResponseDto;
 import com.tech.motjip.MainActivity;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -57,7 +58,7 @@ public class RetrofitClient {
                     new HttpLoggingInterceptor();
 
             loggingInterceptor.setLevel(
-                    HttpLoggingInterceptor.Level.BODY
+                    HttpLoggingInterceptor.Level.BASIC
             );
 
             Interceptor authInterceptor = chain -> {
@@ -175,6 +176,18 @@ public class RetrofitClient {
 
             OkHttpClient httpClient =
                     new OkHttpClient.Builder()
+                            .connectTimeout(
+                                    30,
+                                    TimeUnit.SECONDS
+                            )
+                            .readTimeout(
+                                    60,
+                                    TimeUnit.SECONDS
+                            )
+                            .writeTimeout(
+                                    60,
+                                    TimeUnit.SECONDS
+                            )
                             .addInterceptor(authInterceptor)
                             .addInterceptor(loggingInterceptor)
                             .build();
@@ -206,6 +219,18 @@ public class RetrofitClient {
 
             OkHttpClient refreshClient =
                     new OkHttpClient.Builder()
+                            .connectTimeout(
+                                    30,
+                                    TimeUnit.SECONDS
+                            )
+                            .readTimeout(
+                                    60,
+                                    TimeUnit.SECONDS
+                            )
+                            .writeTimeout(
+                                    60,
+                                    TimeUnit.SECONDS
+                            )
                             .build();
 
             Retrofit refreshRetrofit =

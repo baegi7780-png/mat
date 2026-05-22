@@ -34,6 +34,7 @@ public class MyInfoActivity extends AppCompatActivity {
 
     private Button btnEditNickname;
     private Button btnEditProfileImage;
+    private Button btnMyStatusSetting;
     private Button btnLogout;
     private Button btnDeleteAccount;
 
@@ -64,6 +65,9 @@ public class MyInfoActivity extends AppCompatActivity {
         btnEditProfileImage =
                 findViewById(R.id.btnEditProfileImage);
 
+        btnMyStatusSetting =
+                findViewById(R.id.btnMyStatusSetting);
+
         btnLogout =
                 findViewById(R.id.btnLogout);
 
@@ -87,6 +91,17 @@ public class MyInfoActivity extends AppCompatActivity {
 
         btnEditProfileImage.setOnClickListener(v -> {
             imagePickerLauncher.launch("image/*");
+        });
+
+        btnMyStatusSetting.setOnClickListener(v -> {
+
+            Intent intent =
+                    new Intent(
+                            MyInfoActivity.this,
+                            MyStatusSettingActivity.class
+                    );
+
+            startActivity(intent);
         });
 
         // 로그아웃 기능 추가
@@ -221,7 +236,7 @@ public class MyInfoActivity extends AppCompatActivity {
                             } else if (result.getResultCode()
                                     == UCrop.RESULT_ERROR) {
 
-                                DialogUtil.showCustomDialog(
+                                DialogUtil.showMessageDialog(
                                         this,
                                         R.drawable.fail,
                                         "이미지 오류",
@@ -306,7 +321,7 @@ public class MyInfoActivity extends AppCompatActivity {
                             if (response.isSuccessful()
                                     && response.body() != null) {
 
-                                DialogUtil.showCustomDialog(
+                                DialogUtil.showMessageDialog(
                                         MyInfoActivity.this,
                                         R.drawable.success,
                                         "수정 완료",
@@ -316,7 +331,7 @@ public class MyInfoActivity extends AppCompatActivity {
 
                             } else {
 
-                                DialogUtil.showCustomDialog(
+                                DialogUtil.showMessageDialog(
                                         MyInfoActivity.this,
                                         R.drawable.fail,
                                         "수정 실패",
@@ -332,7 +347,7 @@ public class MyInfoActivity extends AppCompatActivity {
                                 Throwable t
                         ) {
 
-                            DialogUtil.showCustomDialog(
+                            DialogUtil.showMessageDialog(
                                     MyInfoActivity.this,
                                     R.drawable.fail,
                                     "연결 오류",
@@ -344,7 +359,7 @@ public class MyInfoActivity extends AppCompatActivity {
 
         } catch (Exception e) {
 
-            DialogUtil.showCustomDialog(
+            DialogUtil.showMessageDialog(
                     this,
                     R.drawable.fail,
                     "이미지 오류",

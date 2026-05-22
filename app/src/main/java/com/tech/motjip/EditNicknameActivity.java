@@ -44,7 +44,7 @@ public class EditNicknameActivity extends AppCompatActivity {
 
             // 특수문자 제한 검사
             if (!inputNickname.matches("^[a-zA-Z0-9가-힣]+$")) {
-                DialogUtil.showCustomDialog(
+                DialogUtil.showMessageDialog(
                         this,
                         R.drawable.fail,
                         "닉네임 오류",
@@ -63,7 +63,7 @@ public class EditNicknameActivity extends AppCompatActivity {
                         public void onResponse(Call<LoginResponseDto> call, Response<LoginResponseDto> response) {
                             if (response.isSuccessful() && response.body() != null) {
                                 // 성공 모달 표시 후 확인 버튼을 눌러야 finish()
-                                DialogUtil.showCustomDialog(
+                                DialogUtil.showMessageDialog(
                                         EditNicknameActivity.this,
                                         R.drawable.success,
                                         "수정 완료",
@@ -71,7 +71,7 @@ public class EditNicknameActivity extends AppCompatActivity {
                                         () -> finish()
                                 );
                             } else {
-                                DialogUtil.showCustomDialog(
+                                DialogUtil.showMessageDialog(
                                         EditNicknameActivity.this,
                                         R.drawable.fail,
                                         "수정 실패",
@@ -83,7 +83,7 @@ public class EditNicknameActivity extends AppCompatActivity {
 
                         @Override
                         public void onFailure(Call<LoginResponseDto> call, Throwable t) {
-                            DialogUtil.showCustomDialog(
+                            DialogUtil.showMessageDialog(
                                     EditNicknameActivity.this,
                                     R.drawable.fail,
                                     "연결 오류",

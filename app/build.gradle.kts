@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.dagger.hilt.android")
+    id("com.google.gms.google-services")
 }
 
 val localProperties = Properties()
@@ -39,7 +40,6 @@ android {
             abiFilters.add("arm64-v8a")
             abiFilters.add("armeabi-v7a")
 
-            // 추가
             abiFilters.add("x86")
             abiFilters.add("x86_64")
         }
@@ -63,10 +63,16 @@ android {
 }
 
 dependencies {
+
+    implementation("com.google.firebase:firebase-messaging:24.0.1")
+
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
     implementation("org.jsoup:jsoup:1.14.3")
 
     implementation("com.github.bumptech.glide:glide:4.12.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
 
     implementation("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
@@ -82,6 +88,8 @@ dependencies {
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
@@ -89,18 +97,16 @@ dependencies {
     implementation("androidx.browser:browser:1.8.0")
     implementation("com.google.android.material:material:1.12.0")
 
-    // 프로필 이미지 선택 및 자르기
+    implementation("it.xabaras.android:recyclerview-swipedecorator:1.4")
+
     implementation("com.github.yalantis:ucrop:2.2.8")
-    // 게시글 이미지 보여주기
+
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
-    // 상태 코드 변경
     implementation("androidx.lifecycle:lifecycle-process:2.8.7")
 
-    // 채팅 관련
     implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
     implementation("io.reactivex.rxjava2:rxjava:2.2.21")
-
 
     implementation(libs.appcompat)
     implementation(libs.material)

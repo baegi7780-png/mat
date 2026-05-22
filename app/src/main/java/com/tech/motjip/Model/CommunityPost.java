@@ -34,4 +34,8 @@ public class CommunityPost implements Serializable {
     private boolean mine;
 
     private boolean joined;
+
+    private boolean closed;
+
+    private int memberCount;
 }

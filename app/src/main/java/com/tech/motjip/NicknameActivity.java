@@ -92,7 +92,7 @@ public class NicknameActivity extends AppCompatActivity
             // 특수문자 제한 검사
             if (!inputNickname.matches("^[a-zA-Z0-9가-힣]+$")) {
 
-                DialogUtil.showCustomDialog(
+                DialogUtil.showMessageDialog(
                         this,
                         R.drawable.fail,
                         "닉네임 오류",
@@ -121,7 +121,7 @@ public class NicknameActivity extends AppCompatActivity
                 LoginStateManager.LOGIN
         );
 
-        DialogUtil.showCustomDialog(
+        DialogUtil.showMessageDialog(
                 this,
                 R.drawable.success,
                 "설정 완료",
@@ -151,7 +151,7 @@ public class NicknameActivity extends AppCompatActivity
             String message
     ) {
 
-        DialogUtil.showCustomDialog(
+        DialogUtil.showMessageDialog(
                 this,
                 R.drawable.fail,
                 "설정 실패",

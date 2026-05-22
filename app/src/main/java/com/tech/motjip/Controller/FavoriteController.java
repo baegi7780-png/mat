@@ -4,6 +4,9 @@ import android.content.Context;
 
 import com.tech.motjip.API.ApiService;
 import com.tech.motjip.API.RetrofitClient;
+import com.tech.motjip.Model.CommunityPost;
+
+import java.util.List;
 
 import retrofit2.Callback;
 
@@ -25,5 +28,13 @@ public class FavoriteController {
         apiService.toggleFavoriteCommunityPost(
                 comId
         ).enqueue(callback);
+    }
+
+    public void getFavoriteCommunityPosts(
+            Callback<List<CommunityPost>> callback
+    ) {
+
+        apiService.getFavoriteCommunityPosts()
+                .enqueue(callback);
     }
 }

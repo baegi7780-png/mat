@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F7F7">
+    android:background="#faf8f2">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -176,14 +176,35 @@
                 android:layout_marginEnd="12dp"
                 android:background="#EEEEEE" />
 
-            <Button
+            <!-- 내 모임 -->
+            <LinearLayout
+                android:id="@+id/btnMyCommunity"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="추가 예정"
-                android:textColor="#111111"
-                android:gravity="start|center_vertical"
-                android:textAllCaps="false"
-                android:background="@android:color/transparent" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_spoon"
+                    android:scaleType="fitCenter"
+                    app:tint="#FF8A3D" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="내 모임"
+                    android:textColor="#111111"
+                    android:textSize="15sp" />
+
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
@@ -192,14 +213,36 @@
                 android:layout_marginEnd="12dp"
                 android:background="#EEEEEE" />
 
-            <Button
+            <!-- 알림 -->
+            <!-- 알림 -->
+            <LinearLayout
+                android:id="@+id/btnNotification"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="추가 예정"
-                android:textColor="#111111"
-                android:gravity="start|center_vertical"
-                android:textAllCaps="false"
-                android:background="@android:color/transparent" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_notification"
+                    android:scaleType="fitCenter"
+                    app:tint="#FFC107" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="알림"
+                    android:textColor="#111111"
+                    android:textSize="15sp" />
+
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
