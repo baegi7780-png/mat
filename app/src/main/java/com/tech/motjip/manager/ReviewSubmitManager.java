@@ -69,7 +69,6 @@ public class ReviewSubmitManager {
                         + longitudeBody
         );
 
-
         RetrofitClient
                 .getApiService(
                         context
