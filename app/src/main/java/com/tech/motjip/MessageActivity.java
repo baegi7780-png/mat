@@ -41,49 +41,30 @@ public class MessageActivity extends AppCompatActivity {
             "MessageActivity";
 
     private View rootView;
-
     private RecyclerView recyclerView;
-
     private LinearLayout layoutInput;
-
     private EditText etMessage;
-
     private Button btnSend;
-
     private ImageView btnSelectImage;
-
     private ImageView btnChatMenu;
-
     private LinearLayout layoutMemberPanel;
-
     private View viewMemberPanelDim;
-
     private RecyclerView rvMemberPanelList;
-
     private TextView tvMemberLoading;
-
     private ImageView btnCloseMemberPanel;
-
     private Button btnInviteFromMemberPanel;
-
     private Button btnShareInviteLink;
-
     private Button btnLeaveChatRoom;
-
     private TextView tvTitle;
 
     private MessageController messageController;
 
     private long roomId = -1L;
-
     private Long myMemberId = -1L;
 
     private boolean isControllerStarted = false;
-
     private boolean reopenMemberPanelAfterInvite = false;
-
     private boolean isMemberPanelAnimating = false;
-
     private boolean skipNextResumeMemberReload = false;
 
     private int defaultRecyclerBottomPadding = 16;
@@ -121,7 +102,6 @@ public class MessageActivity extends AppCompatActivity {
                                 if (reopenMemberPanelAfterInvite) {
 
                                     reopenMemberPanelAfterInvite = false;
-
                                     skipNextResumeMemberReload = true;
 
                                     openMemberPanel();
@@ -427,6 +407,27 @@ public class MessageActivity extends AppCompatActivity {
         isControllerStarted = true;
 
         saveActiveChatRoom();
+
+        /*
+         * 최초 1:1 채팅방 생성 직후에는
+         * socket subscribe 타이밍보다 메시지 수신이 먼저 발생할 수 있습니다.
+         *
+         * 이 경우 첫 메시지를 놓칠 수 있으므로
+         * 최초 진입 안정화용으로 채팅 내역을 한 번 더 재조회합니다.
+         */
+        recyclerView.postDelayed(() -> {
+
+            if (messageController != null) {
+
+                Log.d(
+                        TAG,
+                        "최초 진입 안정화 재동기화 실행"
+                );
+
+                messageController.forceReloadChatHistory();
+            }
+
+        }, 700);
     }
 
     @Override
@@ -546,6 +547,11 @@ public class MessageActivity extends AppCompatActivity {
                             + newRoomId
             );
 
+            if (messageController != null) {
+
+                messageController.forceReloadChatHistory();
+            }
+
             return;
         }
 
@@ -600,6 +606,20 @@ public class MessageActivity extends AppCompatActivity {
                 true;
 
         saveActiveChatRoom();
+
+        recyclerView.postDelayed(() -> {
+
+            if (messageController != null) {
+
+                Log.d(
+                        TAG,
+                        "푸시 이동 후 안정화 재동기화 실행"
+                );
+
+                messageController.forceReloadChatHistory();
+            }
+
+        }, 700);
 
         scrollRecyclerViewToBottom();
 
@@ -1347,6 +1367,8 @@ public class MessageActivity extends AppCompatActivity {
                 && isControllerStarted) {
 
             messageController.onResume();
+
+            messageController.forceReloadChatHistory();
         }
 
         if (skipNextResumeMemberReload) {

@@ -25,67 +25,38 @@ import java.util.List;
 
 public class HomeSearchManager {
 
+    private static final String TAG =
+            "HomeSearchManager";
+
     private final Fragment fragment;
 
     private final TestController controller;
 
     private final LayoutInflater inflater;
 
-    /*
-     * 검색 BottomSheet 전용 Manager
-     */
     private final HomeSearchBottomSheetManager bottomSheetManager;
 
-    /*
-     * 검색 입력창
-     */
     private final EditText etSearch;
 
-    /*
-     * 검색 버튼
-     */
     private final Button btnSearch;
 
-    /*
-     * 검색창 토글 버튼
-     */
     private final Button btnToggle;
 
-    /*
-     * 검색 오버레이
-     */
     private final View overlaySuggestion;
 
-    /*
-     * 자동완성 컨테이너
-     */
     private final LinearLayout suggestionContainer;
 
-    /*
-     * 검색 결과 컨테이너
-     */
     private final LinearLayout resultContainer;
 
-    /*
-     * 디바운스 핸들러
-     */
     private final Handler debounceHandler;
 
-    /*
-     * 검색 결과 클릭 콜백
-     */
     private final IViewDetailItemClickCallback itemClickCallback;
 
-    /*
-     * 검색 결과 활성 상태
-     */
-    private boolean searchActive = false;
+    private boolean searchActive =
+            false;
 
-    /*
-     * 검색창 초기화 중인지 여부
-     * setText("") 호출 시 TextWatcher가 다시 호출되는 것을 방지
-     */
-    private boolean clearingSearch = false;
+    private boolean clearingSearch =
+            false;
 
     public HomeSearchManager(
             Fragment fragment,
@@ -95,11 +66,14 @@ public class HomeSearchManager {
             HomeSearchBottomSheetManager bottomSheetManager
     ) {
 
-        this.fragment = fragment;
+        this.fragment =
+                fragment;
 
-        this.controller = controller;
+        this.controller =
+                controller;
 
-        this.itemClickCallback = callback;
+        this.itemClickCallback =
+                callback;
 
         this.bottomSheetManager =
                 bottomSheetManager;
@@ -147,9 +121,6 @@ public class HomeSearchManager {
         init();
     }
 
-    /*
-     * 초기화
-     */
     private void init() {
 
         btnToggle.setOnClickListener(v -> {
@@ -188,20 +159,12 @@ public class HomeSearchManager {
                             .toString()
                             .trim();
 
-            if (keyword.isEmpty()) {
-
-                clearSearchResultAndCloseOverlay();
-
-                return;
-            }
-
-            doSearch(keyword);
+            doSearch(
+                    keyword
+            );
         });
     }
 
-    /*
-     * 자동완성 초기화
-     */
     private void initSuggestionSearch() {
 
         Runnable[] debounceRunnable = {
@@ -231,8 +194,7 @@ public class HomeSearchManager {
                             return;
                         }
 
-                        if (debounceRunnable[0]
-                                != null) {
+                        if (debounceRunnable[0] != null) {
 
                             debounceHandler.removeCallbacks(
                                     debounceRunnable[0]
@@ -244,11 +206,39 @@ public class HomeSearchManager {
                                         .trim();
 
                         /*
-                         * 검색어 비어있으면 자동완성 / 검색 결과 초기화
+                         * 검색어가 비어 있을 때는
+                         * 검색 마커를 지우지 않습니다.
+                         *
+                         * 검색 마커는 추천 마커가 켜질 때만 제거됩니다.
                          */
                         if (keyword.isEmpty()) {
 
-                            clearSearchResultAndCloseOverlay();
+                            Log.d(
+                                    TAG,
+                                    "검색어 비어 있음 → 마커 유지, 자동완성만 초기화"
+                            );
+
+                            searchActive =
+                                    false;
+
+                            debounceHandler.removeCallbacksAndMessages(
+                                    null
+                            );
+
+                            if (suggestionContainer != null) {
+
+                                suggestionContainer.removeAllViews();
+                            }
+
+                            if (resultContainer != null) {
+
+                                resultContainer.removeAllViews();
+                            }
+
+                            if (bottomSheetManager != null) {
+
+                                bottomSheetManager.hide();
+                            }
 
                             return;
                         }
@@ -272,8 +262,7 @@ public class HomeSearchManager {
 
                                                             suggestionContainer.removeAllViews();
 
-                                                            for (KeywordMapVO vo
-                                                                    : result) {
+                                                            for (KeywordMapVO vo : result) {
 
                                                                 View item =
                                                                         inflater.inflate(
@@ -301,7 +290,9 @@ public class HomeSearchManager {
                                                                     );
                                                                 });
 
-                                                                suggestionContainer.addView(item);
+                                                                suggestionContainer.addView(
+                                                                        item
+                                                                );
                                                             }
                                                         });
                                             }
@@ -334,18 +325,69 @@ public class HomeSearchManager {
         );
     }
 
-    /*
-     * 검색 수행
-     */
     public void doSearch(
             String keyword
     ) {
 
-        searchActive = true;
+        if (keyword == null) {
+
+            keyword =
+                    "";
+        }
+
+        keyword =
+                keyword.trim();
 
         hideKeyboard();
 
         closeSearchOverlay();
+
+        /*
+         * 검색어가 비어 있으면
+         * 검색 마커와 추천 마커 모두 유지합니다.
+         * 실제 검색만 중단합니다.
+         */
+        if (keyword.isEmpty()) {
+
+            Log.d(
+                    TAG,
+                    "검색어 비어 있음 → 검색 중단, 마커 유지"
+            );
+
+            searchActive =
+                    false;
+
+            if (resultContainer != null) {
+
+                resultContainer.removeAllViews();
+            }
+
+            if (suggestionContainer != null) {
+
+                suggestionContainer.removeAllViews();
+            }
+
+            if (bottomSheetManager != null) {
+
+                bottomSheetManager.hide();
+            }
+
+            return;
+        }
+
+        if (controller != null) {
+
+            /*
+             * 검색어가 있을 때 검색을 실행하면
+             * 추천 마커를 제거하고 기존 검색 마커도 새 결과로 교체합니다.
+             */
+            controller.clearRecommendedMarkers();
+
+            controller.clearMarkers();
+        }
+
+        searchActive =
+                true;
 
         if (bottomSheetManager != null) {
 
@@ -386,55 +428,62 @@ public class HomeSearchManager {
         );
     }
 
-    /*
-     * 검색 결과 / 자동완성 / 검색창 상태 초기화
-     */
     public void clearSearchResultAndCloseOverlay() {
 
-        searchActive = false;
+        searchActive =
+                false;
 
-        clearingSearch = true;
+        clearingSearch =
+                true;
 
         debounceHandler.removeCallbacksAndMessages(
                 null
         );
 
+        /*
+         * 검색창 초기화는 마커를 지우지 않습니다.
+         * 검색 마커는 추천 마커가 켜질 때,
+         * 또는 새 검색어로 검색할 때만 교체됩니다.
+         */
+
         if (resultContainer != null) {
+
             resultContainer.removeAllViews();
         }
 
         if (suggestionContainer != null) {
+
             suggestionContainer.removeAllViews();
         }
 
         if (etSearch != null) {
-            etSearch.setText("");
+
+            etSearch.setText(
+                    ""
+            );
+
             etSearch.clearFocus();
         }
 
-        clearingSearch = false;
+        clearingSearch =
+                false;
 
         closeSearchOverlay();
 
         hideKeyboard();
 
         if (bottomSheetManager != null) {
+
             bottomSheetManager.hide();
         }
     }
 
-    /*
-     * 검색 결과 BottomSheet 표시 여부
-     */
     public boolean isSearchResultVisible() {
 
         return bottomSheetManager != null
                 && bottomSheetManager.isVisible();
     }
 
-    /*
-     * 검색어 입력 여부
-     */
     public boolean hasSearchText() {
 
         return etSearch != null
@@ -445,9 +494,6 @@ public class HomeSearchManager {
                 .isEmpty();
     }
 
-    /*
-     * 검색 상태 존재 여부
-     */
     public boolean hasActiveSearch() {
 
         return searchActive

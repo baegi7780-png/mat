@@ -26,6 +26,7 @@ import com.tech.motjip.API.KakaoMap.KakaoMapStarter;
 import com.tech.motjip.API.KakaoMap.Utils.MapHelper;
 import com.tech.motjip.Model.KeywordMapVO;
 import com.tech.motjip.Model.MapPostionVO;
+import com.tech.motjip.Model.RecommendedPlace;
 import com.tech.motjip.Thread.IThreadCallback;
 import com.tech.motjip.Thread.IThreadReturn1Callback;
 
@@ -43,7 +44,11 @@ public class TestController implements IMapStartCallback {
     IThreadCallback callback;
 
     // GPS 실패 시 기본 좌표 (목동)
-    private static final LatLng DEFAULT_POSITION = LatLng.from(37.53660174890449, 126.8819899200535);
+    private static final LatLng DEFAULT_POSITION =
+            LatLng.from(
+                    37.53660174890449,
+                    126.8819899200535
+            );
 
     // 현재 사용자 위치 (검색 기준 좌표)
     private LatLng currentPosition;
@@ -51,37 +56,76 @@ public class TestController implements IMapStartCallback {
     // 현재 사용자 위치 마커
     private Label myLocationLabel;
 
-    public TestController(Activity activity) {
-        this.testActivity = activity;
+    public TestController(
+            Activity activity
+    ) {
+        this.testActivity =
+                activity;
     }
 
     // 콜백함수를 할당하고 맵뷰에 맵을 그립니다.
-    public void mapStart(MapView mapView, IThreadCallback callback) {
-        this.mapStarter = new KakaoMapStarter(mapView, this, testActivity);
-        this.callback = callback;
-        this.currentPosition = DEFAULT_POSITION;
+    public void mapStart(
+            MapView mapView,
+            IThreadCallback callback
+    ) {
+        this.mapStarter =
+                new KakaoMapStarter(
+                        mapView,
+                        this,
+                        testActivity
+                );
+
+        this.callback =
+                callback;
+
+        this.currentPosition =
+                DEFAULT_POSITION;
+
         mapStarter.start();
     }
 
     // 콜백함수를 할당하고 맵뷰에 맵을 그리고 맵의 위치를 좌표에 따라 이동시킵니다.
-    public void mapStart(MapView mapView, IThreadCallback callback, LatLng startPosition) {
-        this.mapStarter = new KakaoMapStarter(mapView, this, testActivity);
-        this.callback = callback;
-        this.currentPosition = startPosition;
-        mapStarter.start(startPosition);
+    public void mapStart(
+            MapView mapView,
+            IThreadCallback callback,
+            LatLng startPosition
+    ) {
+        this.mapStarter =
+                new KakaoMapStarter(
+                        mapView,
+                        this,
+                        testActivity
+                );
+
+        this.callback =
+                callback;
+
+        this.currentPosition =
+                startPosition;
+
+        mapStarter.start(
+                startPosition
+        );
     }
 
     // 현재 위치를 갱신하고 지도에 표시합니다.
-    public void updateCurrentLocation(LatLng position) {
+    public void updateCurrentLocation(
+            LatLng position
+    ) {
 
         if (position == null) {
             return;
         }
 
-        currentPosition = position;
+        currentPosition =
+                position;
 
         if (mapHandler != null) {
-            moveMapCamara(position);
+
+            moveMapCamara(
+                    position
+            );
+
             drawMyLocationMarker();
         }
     }
@@ -89,14 +133,29 @@ public class TestController implements IMapStartCallback {
     // 권한이 확보된 상태에서 GPS 위치를 비동기로 가져와 콜백으로 반환합니다.
     // GPS 캐시 없으면 신호 기다리고, 5초 내 안 오면 onError 호출 후 GPS 요청 취소
     @SuppressLint("MissingPermission")
-    public void fetchLocation(LocationManager locationManager, IThreadReturn1Callback<LatLng> callback) {
+    public void fetchLocation(
+            LocationManager locationManager,
+            IThreadReturn1Callback<LatLng> callback
+    ) {
 
-        Location last = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location last =
+                locationManager.getLastKnownLocation(
+                        LocationManager.GPS_PROVIDER
+                );
 
         if (last != null) {
 
-            if (!MapHelper.isInKorea(last.getLatitude(), last.getLongitude())) {
-                callback.onError(new Exception("한국 범위 외 좌표"));
+            if (!MapHelper.isInKorea(
+                    last.getLatitude(),
+                    last.getLongitude()
+            )) {
+
+                callback.onError(
+                        new Exception(
+                                "한국 범위 외 좌표"
+                        )
+                );
+
                 return;
             }
 
@@ -108,48 +167,81 @@ public class TestController implements IMapStartCallback {
                             )
                     );
 
-            currentPosition = position;
+            currentPosition =
+                    position;
 
-            callback.ThreadEnds(position);
+            callback.ThreadEnds(
+                    position
+            );
+
             return;
         }
 
-        Handler handler = new Handler(Looper.getMainLooper());
+        Handler handler =
+                new Handler(
+                        Looper.getMainLooper()
+                );
 
-        android.location.LocationListener[] listenerRef = {null};
+        android.location.LocationListener[] listenerRef =
+                {null};
 
-        Runnable[] timeoutRef = {null};
+        Runnable[] timeoutRef =
+                {null};
 
-        listenerRef[0] = location -> {
+        listenerRef[0] =
+                location -> {
 
-            handler.removeCallbacks(timeoutRef[0]);
-
-            locationManager.removeUpdates(listenerRef[0]);
-
-            if (!MapHelper.isInKorea(location.getLatitude(), location.getLongitude())) {
-                callback.onError(new Exception("한국 범위 외 좌표"));
-                return;
-            }
-
-            LatLng position =
-                    MapHelper.getLatLng(
-                            new MapPostionVO(
-                                    location.getLatitude(),
-                                    location.getLongitude()
-                            )
+                    handler.removeCallbacks(
+                            timeoutRef[0]
                     );
 
-            currentPosition = position;
+                    locationManager.removeUpdates(
+                            listenerRef[0]
+                    );
 
-            callback.ThreadEnds(position);
-        };
+                    if (!MapHelper.isInKorea(
+                            location.getLatitude(),
+                            location.getLongitude()
+                    )) {
 
-        timeoutRef[0] = () -> {
+                        callback.onError(
+                                new Exception(
+                                        "한국 범위 외 좌표"
+                                )
+                        );
 
-            locationManager.removeUpdates(listenerRef[0]);
+                        return;
+                    }
 
-            callback.onError(new Exception("GPS 타임아웃"));
-        };
+                    LatLng position =
+                            MapHelper.getLatLng(
+                                    new MapPostionVO(
+                                            location.getLatitude(),
+                                            location.getLongitude()
+                                    )
+                            );
+
+                    currentPosition =
+                            position;
+
+                    callback.ThreadEnds(
+                            position
+                    );
+                };
+
+        timeoutRef[0] =
+                () -> {
+
+                    locationManager.removeUpdates(
+                            listenerRef[0]
+                    );
+
+                    callback.onError(
+                            new Exception(
+                                    "GPS 타임아웃"
+                            )
+                    );
+                };
 
         locationManager.requestSingleUpdate(
                 LocationManager.GPS_PROVIDER,
@@ -158,26 +250,46 @@ public class TestController implements IMapStartCallback {
         );
 
         // 여기서 대기시간 설정
-        handler.postDelayed(timeoutRef[0], 5000);
+        handler.postDelayed(
+                timeoutRef[0],
+                5000
+        );
     }
 
     public void showAppKey() {
-        Log.d("앱키 : ", mapStarter.getAppKey());
+
+        Log.d(
+                "앱키 : ",
+                mapStarter.getAppKey()
+        );
     }
 
     public void showAndroidHashKey() {
-        Log.d("해시키 : ", mapStarter.getHashKey());
+
+        Log.d(
+                "해시키 : ",
+                mapStarter.getHashKey()
+        );
     }
 
     // 키워드에 따른 데이터를 찾습니다.
-    public void searchMapData(String keyword, IThreadReturn1Callback<List<KeywordMapVO>> callback) {
+    public void searchMapData(
+            String keyword,
+            IThreadReturn1Callback<List<KeywordMapVO>> callback
+    ) {
 
         // GetJsonAsync.GetMapSearchDataAsync(keyword,callback);  // 좌표 없는 전체 검색 (보류)
-        LatLng pos = currentPosition != null ? currentPosition : DEFAULT_POSITION;
+        LatLng pos =
+                currentPosition != null
+                        ? currentPosition
+                        : DEFAULT_POSITION;
 
         GetJsonAsync.GetMapSearchDataWithConditions(
                 keyword,
-                new MapPostionVO(pos.getLatitude(), pos.getLongitude()),
+                new MapPostionVO(
+                        pos.getLatitude(),
+                        pos.getLongitude()
+                ),
                 "10000",
                 callback
         );
@@ -185,6 +297,7 @@ public class TestController implements IMapStartCallback {
 
     // 마커를 그립니다(테스트용)
     public void drawMarker() {
+
         mapHandler.setMarker(
                 MapHelper.getLatLng(
                         new MapPostionVO(
@@ -200,7 +313,9 @@ public class TestController implements IMapStartCallback {
     public void drawMyLocationMarker() {
 
         // 맵이 아직 준비되지 않았거나 현재 위치가 없다면 종료
-        if (mapHandler == null || currentPosition == null) {
+        if (mapHandler == null
+                || currentPosition == null) {
+
             return;
         }
 
@@ -208,8 +323,11 @@ public class TestController implements IMapStartCallback {
 
             // 기존 현재 위치 마커가 있다면 제거합니다.
             if (myLocationLabel != null) {
+
                 myLocationLabel.remove();
-                myLocationLabel = null;
+
+                myLocationLabel =
+                        null;
             }
 
             // 검색 마커와 같은 방식으로 현재 위치 마커를 생성합니다.
@@ -237,46 +355,146 @@ public class TestController implements IMapStartCallback {
     }
 
     // 검색 결과값에 따른 마커를 그립니다 (클러스터링 적용).
-    public void drawMarker(List<KeywordMapVO> vo) {
+    public void drawMarker(
+            List<KeywordMapVO> vo
+    ) {
 
         // 마커 목록 통째로 전달 — 클러스터링은 ClusterManager에서 자동 처리
-        mapHandler.setMarkers(vo);
+        mapHandler.setMarkers(
+                vo
+        );
     }
 
     // 마커 클릭 이벤트 리스너를 등록합니다 (리스트 클릭과 동일하게 카메라 이동까지 처리).
-    public void setMarkerClickListener(IViewDetailItemClickCallback callback) {
+    public void setMarkerClickListener(
+            IViewDetailItemClickCallback callback
+    ) {
 
         if (mapHandler != null) {
 
             mapHandler.setMarkerClickListener(vo -> {
 
-                callback.onItemClick(vo);
+                callback.onItemClick(
+                        vo
+                );
 
-                focusOnPlace(vo);
+                focusOnPlace(
+                        vo
+                );
             });
         }
     }
 
     // 타겟 포지션으로 카메라를 이동시킵니다.
-    public void moveMapCamara(LatLng targetPosition) {
+    public void moveMapCamara(
+            LatLng targetPosition
+    ) {
 
-        mapHandler.moveCamera(targetPosition);
+        if (mapHandler == null
+                || targetPosition == null) {
+
+            return;
+        }
+
+        mapHandler.moveCamera(
+                targetPosition
+        );
     }
 
     // 맵의 마커를 초기화합니다.
     public void clearMarkers() {
+
+        if (mapHandler == null) {
+            return;
+        }
 
         mapHandler.clearMarkers();
 
         drawMyLocationMarker();
     }
 
+    /*
+     * 추천 장소 마커 표시
+     *
+     * - 기존 검색 마커는 유지
+     * - 추천 프로필 마커만 추가
+     * - 클릭 시 기존 상세페이지 흐름 재사용
+     */
+    public void setRecommendedMarkers(
+            List<RecommendedPlace> places
+    ) {
+
+        if (mapHandler == null) {
+
+            Log.e(
+                    "RECOMMEND_DEBUG",
+                    "mapHandler null"
+            );
+
+            return;
+        }
+
+        Log.d(
+                "RECOMMEND_DEBUG",
+                "추천 마커 표시 count = "
+                        + (
+                        places == null
+                                ? 0
+                                : places.size()
+                )
+        );
+
+        mapHandler.setRecommendedMarkers(
+                places
+        );
+    }
+
+    /*
+     * 추천 마커 제거
+     *
+     * 검색 마커와 내 위치 마커는 유지
+     */
+    public void clearRecommendedMarkers() {
+
+        if (mapHandler == null) {
+
+            Log.e(
+                    "RECOMMEND_DEBUG",
+                    "clearRecommendedMarkers mapHandler null"
+            );
+
+            return;
+        }
+
+        Log.d(
+                "RECOMMEND_DEBUG",
+                "추천 마커 제거"
+        );
+
+        mapHandler.clearRecommendedMarkers();
+    }
+
     // 검색 결과 전체를 지도에 표시합니다.
-    public void showSearchResults(List<KeywordMapVO> result) {
+    public void showSearchResults(
+            List<KeywordMapVO> result
+    ) {
+
+        if (result == null
+                || result.isEmpty()) {
+
+            Log.e(
+                    "TestControllerDebug",
+                    "검색 결과 없음"
+            );
+
+            return;
+        }
 
         clearMarkers();
 
-        drawMarker(result);
+        drawMarker(
+                result
+        );
 
         moveMapCamara(
                 MapHelper.getLatLng(
@@ -287,7 +505,13 @@ public class TestController implements IMapStartCallback {
     }
 
     // 선택한 장소로 카메라를 이동합니다.
-    public void focusOnPlace(KeywordMapVO vo) {
+    public void focusOnPlace(
+            KeywordMapVO vo
+    ) {
+
+        if (vo == null) {
+            return;
+        }
 
         moveMapCamara(
                 MapHelper.getLatLng(
@@ -309,19 +533,29 @@ public class TestController implements IMapStartCallback {
         return new IThreadReturn1Callback<List<KeywordMapVO>>() {
 
             @Override
-            public void ThreadEnds(List<KeywordMapVO> result) {
+            public void ThreadEnds(
+                    List<KeywordMapVO> result
+            ) {
 
-                if (result.isEmpty()) {
+                if (result == null
+                        || result.isEmpty()) {
 
-                    Log.d("TestLog", "결과없음");
+                    Log.d(
+                            "TestLog",
+                            "결과없음"
+                    );
 
                     return;
                 }
 
-                new Handler(Looper.getMainLooper()).post(() -> {
+                new Handler(
+                        Looper.getMainLooper()
+                ).post(() -> {
 
                     // 검색쪽 뷰 꺼주고
-                    overlaySuggestion.setVisibility(View.GONE);
+                    overlaySuggestion.setVisibility(
+                            View.GONE
+                    );
 
                     // 검색 안에 데이터 날려주고
                     suggestionContainer.removeAllViews();
@@ -340,46 +574,70 @@ public class TestController implements IMapStartCallback {
                                 );
 
                         ((TextView) itemView.findViewById(R.id.tv_category))
-                                .setText(vo.getCategory_name());
+                                .setText(
+                                        vo.getCategory_name()
+                                );
 
                         ((TextView) itemView.findViewById(R.id.tv_place_name))
-                                .setText(vo.getPlace_name());
+                                .setText(
+                                        vo.getPlace_name()
+                                );
 
                         ((TextView) itemView.findViewById(R.id.tv_address))
-                                .setText(vo.getRoad_address_name());
+                                .setText(
+                                        vo.getRoad_address_name()
+                                );
 
                         // 리스트에서 클릭이벤트 발생시 상세페이지 실행
                         itemView.setOnClickListener(v -> {
 
                             // 클릭 이벤트를 콜백으로 위임 (UI 처리는 HomeFragment 책임)
                             // 상세페이지를 실행함
-                            onItemClick.onItemClick(vo);
+                            onItemClick.onItemClick(
+                                    vo
+                            );
 
-                            focusOnPlace(vo);
+                            focusOnPlace(
+                                    vo
+                            );
                         });
 
-                        resultContainer.addView(itemView);
+                        resultContainer.addView(
+                                itemView
+                        );
                     }
 
-                    showSearchResults(result);
+                    showSearchResults(
+                            result
+                    );
                 });
             }
 
             @Override
-            public void onError(Exception e) {
+            public void onError(
+                    Exception e
+            ) {
 
-                Log.e("MapDebug", "원인: ", e);
+                Log.e(
+                        "MapDebug",
+                        "원인: ",
+                        e
+                );
             }
         };
     }
 
     @Override
-    public void onError(Exception e) {
+    public void onError(
+            Exception e
+    ) {
 
     }
 
     @Override
-    public void onReady(KakaoMap kakaoMap) {
+    public void onReady(
+            KakaoMap kakaoMap
+    ) {
 
         this.mapHandler =
                 new KakaoMapHandler(
