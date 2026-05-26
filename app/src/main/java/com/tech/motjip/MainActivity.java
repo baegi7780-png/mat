@@ -10,11 +10,11 @@ import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
@@ -43,9 +43,11 @@ import retrofit2.Response;
 public class MainActivity extends BaseActivity
         implements MainController.MainControllerCallback {
 
-    private static final String TAG = "MainActivityDebug";
+    private static final String TAG =
+            "MainActivityDebug";
 
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 3001;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE =
+            3001;
 
     private MainController mainController;
 
@@ -56,7 +58,9 @@ public class MainActivity extends BaseActivity
             Bundle savedInstanceState
     ) {
 
-        super.onCreate(savedInstanceState);
+        super.onCreate(
+                savedInstanceState
+        );
 
         fusedLocationClient =
                 LocationServices.getFusedLocationProviderClient(
@@ -81,21 +85,26 @@ public class MainActivity extends BaseActivity
 
         Log.d(
                 TAG,
-                "받은 intent = " + intent
+                "받은 intent = "
+                        + intent
         );
 
-        if (intent.getData() != null) {
+        if (intent != null
+                && intent.getData() != null) {
 
             Log.d(
                     TAG,
-                    "intent data = " + intent.getData()
+                    "intent data = "
+                            + intent.getData()
             );
         }
 
         String authExpiredMessage =
-                intent.getStringExtra(
+                intent != null
+                        ? intent.getStringExtra(
                         RetrofitClient.AUTH_EXPIRED_MESSAGE
-                );
+                )
+                        : null;
 
         if (authExpiredMessage != null
                 && !authExpiredMessage.isEmpty()) {
@@ -130,7 +139,8 @@ public class MainActivity extends BaseActivity
 
         Log.d(
                 TAG,
-                "딥링크 처리 결과 = " + isDeepLinkHandled
+                "딥링크 처리 결과 = "
+                        + isDeepLinkHandled
         );
 
         if (isDeepLinkHandled) {
@@ -182,14 +192,17 @@ public class MainActivity extends BaseActivity
 
         Log.d(
                 TAG,
-                "new intent = " + intent
+                "new intent = "
+                        + intent
         );
 
-        if (intent.getData() != null) {
+        if (intent != null
+                && intent.getData() != null) {
 
             Log.d(
                     TAG,
-                    "new intent data = " + intent.getData()
+                    "new intent data = "
+                            + intent.getData()
             );
         }
 
@@ -200,7 +213,8 @@ public class MainActivity extends BaseActivity
 
         Log.d(
                 TAG,
-                "onNewIntent 딥링크 처리 결과 = " + handled
+                "onNewIntent 딥링크 처리 결과 = "
+                        + handled
         );
     }
 
@@ -235,7 +249,8 @@ public class MainActivity extends BaseActivity
 
                 Log.d(
                         TAG,
-                        "카카오 HASH_KEY = " + hashKey
+                        "카카오 HASH_KEY = "
+                                + hashKey
                 );
             }
 
@@ -291,7 +306,8 @@ public class MainActivity extends BaseActivity
 
             Log.d(
                     TAG,
-                    "구글 로그인 URL = " + url
+                    "구글 로그인 URL = "
+                            + url
             );
 
             try {
@@ -323,7 +339,8 @@ public class MainActivity extends BaseActivity
 
         Log.d(
                 TAG,
-                "로그인 성공 user = " + user
+                "로그인 성공 user = "
+                        + user
         );
 
         LoginStateManager.setLoginStatus(
@@ -418,7 +435,8 @@ public class MainActivity extends BaseActivity
 
                     Log.d(
                             TAG,
-                            "현재 FCM Token = " + token
+                            "현재 FCM Token = "
+                                    + token
                     );
 
                     ApiService apiService =
@@ -434,8 +452,8 @@ public class MainActivity extends BaseActivity
 
                         @Override
                         public void onResponse(
-                                Call<Void> call,
-                                Response<Void> response
+                                @NonNull Call<Void> call,
+                                @NonNull Response<Void> response
                         ) {
 
                             if (response.isSuccessful()) {
@@ -457,8 +475,8 @@ public class MainActivity extends BaseActivity
 
                         @Override
                         public void onFailure(
-                                Call<Void> call,
-                                Throwable t
+                                @NonNull Call<Void> call,
+                                @NonNull Throwable t
                         ) {
 
                             Log.d(
@@ -480,10 +498,25 @@ public class MainActivity extends BaseActivity
 
     private void sendLocationToServer() {
 
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED) {
+        Log.d(
+                TAG,
+                "sendLocationToServer 시작"
+        );
+
+        if (fusedLocationClient == null) {
+
+            fusedLocationClient =
+                    LocationServices.getFusedLocationProviderClient(
+                            this
+                    );
+        }
+
+        if (!hasFineLocationPermission()) {
+
+            Log.d(
+                    TAG,
+                    "위치 권한 없음 → 권한 요청"
+            );
 
             ActivityCompat.requestPermissions(
                     this,
@@ -496,37 +529,155 @@ public class MainActivity extends BaseActivity
             return;
         }
 
-        fusedLocationClient.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                null
-        ).addOnSuccessListener(location -> {
+        requestCurrentLocation();
+    }
 
-            if (location == null) {
+    private boolean hasFineLocationPermission() {
 
-                Log.d(
-                        TAG,
-                        "현재 위치를 가져올 수 없음"
-                );
+        return ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED;
+    }
 
-                return;
-            }
+    private void requestCurrentLocation() {
 
-            saveLocationToServer(
-                    location
+        Log.d(
+                TAG,
+                "현재 위치 요청 시작"
+        );
+
+        if (!hasFineLocationPermission()) {
+
+            Log.d(
+                    TAG,
+                    "requestCurrentLocation 중단 - 위치 권한 없음"
             );
 
-        }).addOnFailureListener(e ->
+            return;
+        }
+
+        try {
+
+            fusedLocationClient.getCurrentLocation(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    null
+            ).addOnSuccessListener(location -> {
+
+                if (location != null) {
+
+                    Log.d(
+                            TAG,
+                            "getCurrentLocation 성공"
+                    );
+
+                    saveLocationToServer(
+                            location
+                    );
+
+                } else {
+
+                    Log.d(
+                            TAG,
+                            "getCurrentLocation 결과 null → lastLocation 재시도"
+                    );
+
+                    requestLastLocationFallback();
+                }
+
+            }).addOnFailureListener(e -> {
+
                 Log.e(
                         TAG,
-                        "현재 위치 가져오기 실패",
+                        "getCurrentLocation 실패 → lastLocation 재시도",
                         e
-                )
+                );
+
+                requestLastLocationFallback();
+            });
+
+        } catch (SecurityException e) {
+
+            Log.e(
+                    TAG,
+                    "현재 위치 요청 SecurityException",
+                    e
+            );
+        }
+    }
+
+    private void requestLastLocationFallback() {
+
+        Log.d(
+                TAG,
+                "lastLocation fallback 시작"
         );
+
+        if (!hasFineLocationPermission()) {
+
+            Log.d(
+                    TAG,
+                    "lastLocation 중단 - 위치 권한 없음"
+            );
+
+            return;
+        }
+
+        try {
+
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(location -> {
+
+                        if (location != null) {
+
+                            Log.d(
+                                    TAG,
+                                    "lastLocation 성공"
+                            );
+
+                            saveLocationToServer(
+                                    location
+                            );
+
+                        } else {
+
+                            Log.d(
+                                    TAG,
+                                    "lastLocation도 null - 위치 저장 실패"
+                            );
+                        }
+                    })
+                    .addOnFailureListener(e ->
+                            Log.e(
+                                    TAG,
+                                    "lastLocation 실패",
+                                    e
+                            )
+                    );
+
+        } catch (SecurityException e) {
+
+            Log.e(
+                    TAG,
+                    "lastLocation SecurityException",
+                    e
+            );
+        }
     }
 
     private void saveLocationToServer(
             Location location
     ) {
+
+        if (location == null) {
+
+            Log.d(
+                    TAG,
+                    "saveLocationToServer 중단 - location null"
+            );
+
+            return;
+        }
 
         double latitude =
                 location.getLatitude();
@@ -536,10 +687,12 @@ public class MainActivity extends BaseActivity
 
         Log.d(
                 TAG,
-                "현재 위치 = "
+                "저장할 현재 위치 = "
                         + latitude
                         + ", "
                         + longitude
+                        + ", accuracy="
+                        + location.getAccuracy()
         );
 
         UpdateLocationRequestDto requestDto =
@@ -564,8 +717,8 @@ public class MainActivity extends BaseActivity
 
             @Override
             public void onResponse(
-                    Call<Void> call,
-                    Response<Void> response
+                    @NonNull Call<Void> call,
+                    @NonNull Response<Void> response
             ) {
 
                 if (response.isSuccessful()) {
@@ -587,13 +740,13 @@ public class MainActivity extends BaseActivity
 
             @Override
             public void onFailure(
-                    Call<Void> call,
-                    Throwable t
+                    @NonNull Call<Void> call,
+                    @NonNull Throwable t
             ) {
 
                 Log.e(
                         TAG,
-                        "위치 서버 저장 실패",
+                        "위치 서버 저장 통신 실패",
                         t
                 );
             }
@@ -603,8 +756,8 @@ public class MainActivity extends BaseActivity
     @Override
     public void onRequestPermissionsResult(
             int requestCode,
-            String[] permissions,
-            int[] grantResults
+            @NonNull String[] permissions,
+            @NonNull int[] grantResults
     ) {
 
         super.onRequestPermissionsResult(
@@ -619,7 +772,19 @@ public class MainActivity extends BaseActivity
                     && grantResults[0]
                     == PackageManager.PERMISSION_GRANTED) {
 
+                Log.d(
+                        TAG,
+                        "위치 권한 허용됨 → 위치 저장 재시도"
+                );
+
                 sendLocationToServer();
+
+            } else {
+
+                Log.d(
+                        TAG,
+                        "위치 권한 거부됨"
+                );
             }
         }
     }
@@ -662,7 +827,8 @@ public class MainActivity extends BaseActivity
 
         Log.e(
                 TAG,
-                "로그인 실패 = " + message
+                "로그인 실패 = "
+                        + message
         );
 
         LoginStateManager.setLoginStatus(

@@ -16,6 +16,9 @@ public class FriendResponseDto {
     // 친구 상태
     private String status;
 
+    // 그룹 채팅 선택 여부
+    private boolean selected;
+
     public FriendResponseDto() {
     }
 
@@ -109,5 +112,15 @@ public class FriendResponseDto {
             String status
     ) {
         this.status = status;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(
+            boolean selected
+    ) {
+        this.selected = selected;
     }
 }

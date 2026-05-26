@@ -1,6 +1,8 @@
 package com.tech.motjip;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -11,11 +13,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.tech.motjip.API.ApiService;
 import com.tech.motjip.API.RetrofitClient;
 import com.tech.motjip.Adapter.FriendAdapter;
+import com.tech.motjip.Dto.RequestDto.CreateRoomRequestDto;
 import com.tech.motjip.Dto.ResponseDto.CommunityPostPageResponse;
 import com.tech.motjip.Dto.ResponseDto.FriendRecommendationResponseDto;
 import com.tech.motjip.Dto.ResponseDto.FriendResponseDto;
+import com.tech.motjip.Dto.ResponseDto.FriendStatusResponseDto;
+import com.tech.motjip.Dto.ResponseDto.LoginResponseDto;
+import com.tech.motjip.Model.ChatRoom;
 import com.tech.motjip.Model.CommunityMember;
 import com.tech.motjip.Model.CommunityPost;
 import com.tech.motjip.Utils.DialogUtil;
@@ -30,6 +37,9 @@ import retrofit2.Response;
 
 public class FriendActivity
         extends AppCompatActivity {
+
+    private static final String TAG =
+            "FriendActivity";
 
     private TextView tvFriendList;
     private TextView tvFriendRecommend;
@@ -64,11 +74,9 @@ public class FriendActivity
                                     FriendResponseDto friend
                             ) {
 
-                                Toast.makeText(
-                                        FriendActivity.this,
-                                        "1대1 채팅은 준비중입니다.",
-                                        Toast.LENGTH_SHORT
-                                ).show();
+                                createDirectRoom(
+                                        friend
+                                );
                             }
 
                             @Override
@@ -184,6 +192,7 @@ public class FriendActivity
             tvFriendRecommend.setBackgroundResource(
                     R.drawable.bg_orange_fill_round
             );
+
             tvFriendRecommend.setTextColor(
                     getColor(android.R.color.white)
             );
@@ -191,6 +200,7 @@ public class FriendActivity
             tvFriendList.setBackgroundResource(
                     R.drawable.bg_gray_round
             );
+
             tvFriendList.setTextColor(
                     0xFF444444
             );
@@ -200,6 +210,7 @@ public class FriendActivity
             tvFriendList.setBackgroundResource(
                     R.drawable.bg_orange_fill_round
             );
+
             tvFriendList.setTextColor(
                     getColor(android.R.color.white)
             );
@@ -207,6 +218,7 @@ public class FriendActivity
             tvFriendRecommend.setBackgroundResource(
                     R.drawable.bg_gray_round
             );
+
             tvFriendRecommend.setTextColor(
                     0xFF444444
             );
@@ -364,6 +376,227 @@ public class FriendActivity
                         );
                     }
                 });
+    }
+
+    private void createDirectRoom(
+            FriendResponseDto friend
+    ) {
+
+        ApiService apiService =
+                RetrofitClient.getApiService(this);
+
+        apiService.getCurrentUser()
+                .enqueue(new Callback<LoginResponseDto>() {
+
+                    @Override
+                    public void onResponse(
+                            Call<LoginResponseDto> call,
+                            Response<LoginResponseDto> response
+                    ) {
+
+                        if (!response.isSuccessful()
+                                || response.body() == null) {
+
+                            Toast.makeText(
+                                    FriendActivity.this,
+                                    "내 정보를 불러오지 못했습니다.",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            return;
+                        }
+
+                        Long myId =
+                                response.body().getMemberId();
+
+                        Long targetMemberId =
+                                friend.getMemberId();
+
+                        if (myId == null
+                                || targetMemberId == null) {
+
+                            Toast.makeText(
+                                    FriendActivity.this,
+                                    "채팅방 생성에 필요한 회원 정보가 없습니다.",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            return;
+                        }
+
+                        apiService.findDirectRoom(
+                                myId,
+                                targetMemberId
+                        ).enqueue(new Callback<ChatRoom>() {
+
+                            @Override
+                            public void onResponse(
+                                    Call<ChatRoom> call,
+                                    Response<ChatRoom> roomResponse
+                            ) {
+
+                                if (roomResponse.isSuccessful()
+                                        && roomResponse.body() != null) {
+
+                                    moveToChatRoom(
+                                            roomResponse.body()
+                                    );
+
+                                    return;
+                                }
+
+                                createNewDirectRoom(
+                                        apiService,
+                                        myId,
+                                        friend
+                                );
+                            }
+
+                            @Override
+                            public void onFailure(
+                                    Call<ChatRoom> call,
+                                    Throwable t
+                            ) {
+
+                                Log.e(
+                                        TAG,
+                                        "DIRECT 방 조회 실패",
+                                        t
+                                );
+
+                                createNewDirectRoom(
+                                        apiService,
+                                        myId,
+                                        friend
+                                );
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(
+                            Call<LoginResponseDto> call,
+                            Throwable t
+                    ) {
+
+                        Log.e(
+                                TAG,
+                                "내 정보 조회 실패",
+                                t
+                        );
+
+                        Toast.makeText(
+                                FriendActivity.this,
+                                "내 정보를 불러오지 못했습니다.",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                });
+    }
+
+    private void createNewDirectRoom(
+            ApiService apiService,
+            Long myId,
+            FriendResponseDto friend
+    ) {
+
+        CreateRoomRequestDto request =
+                new CreateRoomRequestDto();
+
+        request.setRoomName(
+                friend.getNickname()
+        );
+
+        request.setRoomType(
+                "DIRECT"
+        );
+
+        List<Long> memberIds =
+                new ArrayList<>();
+
+        memberIds.add(
+                myId
+        );
+
+        memberIds.add(
+                friend.getMemberId()
+        );
+
+        request.setMemberIds(
+                memberIds
+        );
+
+        apiService.createRoom(
+                request
+        ).enqueue(new Callback<ChatRoom>() {
+
+            @Override
+            public void onResponse(
+                    Call<ChatRoom> call,
+                    Response<ChatRoom> response
+            ) {
+
+                if (response.isSuccessful()
+                        && response.body() != null) {
+
+                    moveToChatRoom(
+                            response.body()
+                    );
+
+                    return;
+                }
+
+                Toast.makeText(
+                        FriendActivity.this,
+                        "채팅방 생성에 실패했습니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+
+            @Override
+            public void onFailure(
+                    Call<ChatRoom> call,
+                    Throwable t
+            ) {
+
+                Log.e(
+                        TAG,
+                        "채팅방 생성 실패",
+                        t
+                );
+
+                Toast.makeText(
+                        FriendActivity.this,
+                        "채팅방 생성 중 서버 오류가 발생했습니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+    }
+
+    private void moveToChatRoom(
+            ChatRoom room
+    ) {
+
+        Intent intent =
+                new Intent(
+                        FriendActivity.this,
+                        MessageActivity.class
+                );
+
+        intent.putExtra(
+                "roomId",
+                room.getRoomId()
+        );
+
+        intent.putExtra(
+                "roomName",
+                room.getRoomName()
+        );
+
+        startActivity(
+                intent
+        );
     }
 
     private void sendFriendRequest(

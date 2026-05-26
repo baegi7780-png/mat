@@ -74,6 +74,26 @@
         </activity>
 
         <activity
+            android:name=".InviteJoinActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="motjip"
+                    android:host="chat"
+                    android:pathPrefix="/invite" />
+            </intent-filter>
+
+        </activity>
+
+        <activity
             android:name=".NicknameActivity"
             android:exported="true" />
 
@@ -128,6 +148,15 @@
 
         <activity
             android:name=".MessageActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".GroupCreateActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".InviteFriendActivity"
             android:exported="false" />
 
     </application>

@@ -39,7 +39,6 @@ android {
         ndk {
             abiFilters.add("arm64-v8a")
             abiFilters.add("armeabi-v7a")
-
             abiFilters.add("x86")
             abiFilters.add("x86_64")
         }
@@ -70,8 +69,9 @@ dependencies {
 
     implementation("org.jsoup:jsoup:1.14.3")
 
-    implementation("com.github.bumptech.glide:glide:4.12.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
 
     implementation("org.projectlombok:lombok:1.18.30")
@@ -101,12 +101,13 @@ dependencies {
 
     implementation("com.github.yalantis:ucrop:2.2.8")
 
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-
     implementation("androidx.lifecycle:lifecycle-process:2.8.7")
 
     implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
     implementation("io.reactivex.rxjava2:rxjava:2.2.21")
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
 
     implementation(libs.appcompat)
     implementation(libs.material)

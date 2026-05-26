@@ -1,6 +1,7 @@
 package com.tech.motjip.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.tech.motjip.MessageActivity;
 import com.tech.motjip.Model.NotificationItem;
 import com.tech.motjip.R;
 
@@ -340,13 +342,43 @@ public class NotificationAdapter
                 return;
             }
 
+            int adapterPosition =
+                    holder.getAdapterPosition();
+
+            if (adapterPosition == RecyclerView.NO_POSITION) {
+
+                return;
+            }
+
             if (actionListener != null
                     && !item.isRead()) {
 
                 actionListener.onReadClick(
                         item,
-                        holder.getAdapterPosition()
+                        adapterPosition
                 );
+            }
+
+            if ("CHAT_INVITE".equals(item.getType())
+                    && item.getTargetId() != null) {
+
+                Intent intent =
+                        new Intent(
+                                context,
+                                MessageActivity.class
+                        );
+
+                intent.putExtra(
+                        "roomId",
+                        item.getTargetId()
+                );
+
+                intent.putExtra(
+                        "roomName",
+                        "채팅방"
+                );
+
+                context.startActivity(intent);
             }
         });
 
@@ -471,6 +503,7 @@ public class NotificationAdapter
         public ViewHolder(
                 @NonNull View itemView
         ) {
+
             super(itemView);
 
             tvType =

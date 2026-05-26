@@ -1,32 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingTop="30dp"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:paddingBottom="16dp"
-    android:background="#F8F9FA"> <Button
-    android:id="@+id/btn_create_room"
-    android:layout_width="match_parent"
-    android:layout_height="60dp"
-    android:layout_marginTop="20dp"
-    android:layout_marginBottom="16dp"
-    android:text="+ 새로운 채팅 생성"
-    android:textSize="16sp"
-    android:textStyle="bold"
-    android:textColor="#FFFFFF"
-    android:backgroundTint="#673AB7"
-    android:insetTop="0dp"
-    android:insetBottom="0dp"
-    android:elevation="4dp" />
+    android:background="#FFF7EA"
+    android:paddingStart="16dp"
+    android:paddingTop="24dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="채팅"
+        android:textColor="#241C14"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="같이 먹고 이야기하는 공간"
+        android:textColor="#9B8875"
+        android:textSize="13sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/et_chat_search"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_chat_search_warm"
+            android:drawableStart="@android:drawable/ic_menu_search"
+            android:drawablePadding="10dp"
+            android:gravity="center_vertical"
+            android:hint="채팅방 제목 검색"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textColor="#241C14"
+            android:textColorHint="#B3A89B"
+            android:textSize="14sp" />
+
+        <ImageView
+            android:id="@+id/btn_create_room"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_create_chat_fab_warm"
+            android:clickable="true"
+            android:contentDescription="채팅방 생성"
+            android:elevation="2dp"
+            android:focusable="true"
+            android:padding="14dp"
+            android:src="@android:drawable/sym_action_chat"
+            app:tint="#E36A12" />
+
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_chat_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:scrollbars="vertical" />
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingBottom="14dp"
+        android:scrollbars="none" />
 
 </LinearLayout>

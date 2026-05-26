@@ -1,5 +1,6 @@
 package com.tech.motjip.API;
 
+import com.tech.motjip.Dto.RequestDto.CreateRoomRequestDto;
 import com.tech.motjip.Dto.RequestDto.DeleteNotificationRequestDto;
 import com.tech.motjip.Dto.RequestDto.FcmTokenRequestDto;
 import com.tech.motjip.Dto.RequestDto.KakaoSdkLoginRequestDto;
@@ -24,8 +25,12 @@ import com.tech.motjip.Model.CommunityMember;
 import com.tech.motjip.Model.CommunityPost;
 import com.tech.motjip.Model.Message;
 import com.tech.motjip.Model.NotificationItem;
+import com.tech.motjip.Model.Participant;
+import com.tech.motjip.Model.UploadResponse;
+import com.tech.motjip.Model.User;
 
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -63,6 +68,9 @@ public interface ApiService {
 
     @GET("/api/v1/user/me")
     Call<LoginResponseDto> getCurrentUser();
+
+    @GET("/api/v1/user/users")
+    Call<List<User>> getUsers();
 
     @POST("/api/v1/auth/refresh")
     Call<TokenResponseDto> refreshToken(
@@ -105,6 +113,11 @@ public interface ApiService {
     @GET("/api/chat/rooms")
     Call<List<ChatRoom>> getChatRoomList();
 
+    @GET("/api/chat/my-rooms/{memberId}")
+    Call<List<ChatRoom>> getMyRooms(
+            @Path("memberId") Long memberId
+    );
+
     @GET("/api/chat/messages/{roomId}")
     Call<List<Message>> getChatMessages(
             @Path("roomId") Long roomId
@@ -113,6 +126,80 @@ public interface ApiService {
     @POST("/api/chat/rooms")
     Call<ChatRoom> createChatRoom(
             @Body ChatRoom chatRoom
+    );
+
+    @POST("/api/chat/rooms")
+    Call<ChatRoom> createRoom(
+            @Body CreateRoomRequestDto request
+    );
+
+    @GET("/api/chat/invite/{inviteCode}")
+    Call<ChatRoom> getRoomByInviteCode(
+            @Path("inviteCode") String inviteCode
+    );
+
+    @POST("/api/chat/invite/{inviteCode}/join")
+    Call<String> joinRoomByInviteCode(
+            @Path("inviteCode") String inviteCode,
+            @Query("memberId") Long memberId
+    );
+
+    @PATCH("/api/chat/read/{roomId}/{memberId}")
+    Call<Map<String, Object>> updateReadTime(
+            @Path("roomId") Long roomId,
+            @Path("memberId") Long memberId
+    );
+
+    @DELETE("/api/chat/room/{roomId}/leave")
+    Call<String> leaveRoom(
+            @Path("roomId") Long roomId,
+            @Query("memberId") Long memberId
+    );
+
+    @GET("/api/chat/rooms/{roomId}/members")
+    Call<List<Participant>> getRoomMembers(
+            @Path("roomId") Long roomId
+    );
+
+    @GET("/api/chat/direct-room")
+    Call<ChatRoom> findDirectRoom(
+            @Query("member1") Long member1,
+            @Query("member2") Long member2
+    );
+
+    @DELETE("/api/chat/message/{messageId}")
+    Call<Void> deleteMessage(
+            @Path("messageId") Long messageId
+    );
+
+    @GET("/api/chat/participants/{roomId}")
+    Call<List<FriendResponseDto>> getParticipants(
+            @Path("roomId") Long roomId
+    );
+
+    @POST("/api/chat/rooms/{roomId}/invite/{friendId}")
+    Call<String> inviteFriendToRoom(
+            @Path("roomId") Long roomId,
+            @Path("friendId") Long friendId,
+            @Query("inviterId") Long inviterId
+    );
+
+    @POST("/api/chat/enter")
+    Call<Map<String, Object>> enterChatRoom(
+            @Query("memberId") Long memberId,
+            @Query("roomId") Long roomId
+    );
+
+    @POST("/api/chat/exit")
+    Call<Void> exitChatRoom(
+            @Query("memberId") Long memberId,
+            @Query("roomId") Long roomId
+    );
+
+    @Multipart
+    @POST("/api/files/upload")
+    Call<UploadResponse> uploadImage(
+            @Part MultipartBody.Part file
     );
 
     @Multipart
@@ -245,6 +332,12 @@ public interface ApiService {
             @Path("friendMemberId") Long friendMemberId
     );
 
+    @POST("/api/friends/add")
+    Call<Void> addFriend(
+            @Query("memberId") Long memberId,
+            @Query("friendId") Long friendId
+    );
+
     @GET("/notifications")
     Call<List<NotificationItem>> getNotifications();
 
@@ -267,21 +360,18 @@ public interface ApiService {
             @Body DeleteNotificationRequestDto requestDto
     );
 
-    // 모임 초대 보내기
     @POST("/api/v1/community-invites/{communityId}/{receiverId}")
     Call<Void> sendCommunityInvite(
             @Path("communityId") Long communityId,
             @Path("receiverId") Long receiverId
     );
 
-    // 모임 초대 수락 / 거절
     @POST("/api/v1/community-invites/{communityInviteId}/respond")
     Call<Void> respondCommunityInvite(
             @Path("communityInviteId") Long communityInviteId,
             @Query("status") String status
     );
 
-    // 모임 초대 취소
     @POST("/api/v1/community-invites/{communityInviteId}/cancel")
     Call<Void> cancelCommunityInvite(
             @Path("communityInviteId") Long communityInviteId

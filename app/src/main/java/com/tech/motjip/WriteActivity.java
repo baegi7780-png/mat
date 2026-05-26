@@ -188,6 +188,45 @@ public class WriteActivity extends AppCompatActivity {
         etLocation.setImeOptions(EditorInfo.IME_ACTION_NEXT);
         etContent.setImeOptions(EditorInfo.IME_ACTION_DONE);
 
+        // 지도 상세페이지에서 전달된 장소 데이터 받기
+        String placeName =
+                getIntent().getStringExtra(
+                        "placeName"
+                );
+
+        String placeAddress =
+                getIntent().getStringExtra(
+                        "placeAddress"
+                );
+
+        // 전달받은 장소명 자동 입력
+        // 단순 기본값이므로 사용자가 삭제하거나 수정할 수 있음
+        if (placeName != null
+                && !placeName.isEmpty()) {
+
+            etTitle.setText(
+                    placeName + " 같이 가실 분!"
+            );
+
+            etTitle.setSelection(
+                    etTitle.getText().length()
+            );
+        }
+
+        // 전달받은 주소 자동 입력
+        // 단순 기본값이므로 사용자가 삭제하거나 수정할 수 있음
+        if (placeAddress != null
+                && !placeAddress.isEmpty()) {
+
+            etLocation.setText(
+                    placeAddress
+            );
+
+            etLocation.setSelection(
+                    etLocation.getText().length()
+            );
+        }
+
         tvTitleCount.setText(
                 etTitle.getText().toString().length() + " / 25"
         );
@@ -819,7 +858,6 @@ public class WriteActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-
         handleExit();
     }
 }

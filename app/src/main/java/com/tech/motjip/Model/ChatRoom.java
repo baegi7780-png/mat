@@ -2,24 +2,40 @@ package com.tech.motjip.Model;
 
 public class ChatRoom {
 
-    private Long roomId;         // 서버 DB의 방 번호
-    private String roomName;     // 방 제목
-    private String lastMessage;  // 마지막 대화 (UI용)
-    private String time;         // 시간 (UI용)
+    private Long roomId;
 
-    // 🚀 1. 기본 생성자 (파라미터 0개짜리) - "found 0" 에러 해결!
+    private String roomName;
+
+    private String roomType;
+
+    private String opponentNickname;
+
+    private String lastMessage;
+
+    private String lastMessageType;
+
+    private String time;
+
+    private long unreadCount;
+
+    private String inviteCode;
+
+    private String inviteUrl;
+
     public ChatRoom() {
     }
 
-    // 🚀 2. 전체 생성자 (파라미터 4개짜리)
-    public ChatRoom(Long roomId, String roomName, String lastMessage, String time) {
+    public ChatRoom(
+            Long roomId,
+            String roomName,
+            String lastMessage,
+            String time
+    ) {
         this.roomId = roomId;
         this.roomName = roomName;
         this.lastMessage = lastMessage;
         this.time = time;
     }
-
-    // 🚀 3. Getter & Setter 메서드들 - "Cannot resolve method" 에러들 해결!
 
     public Long getRoomId() {
         return roomId;
@@ -37,6 +53,22 @@ public class ChatRoom {
         this.roomName = roomName;
     }
 
+    public String getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(String roomType) {
+        this.roomType = roomType;
+    }
+
+    public String getOpponentNickname() {
+        return opponentNickname;
+    }
+
+    public void setOpponentNickname(String opponentNickname) {
+        this.opponentNickname = opponentNickname;
+    }
+
     public String getLastMessage() {
         return lastMessage;
     }
@@ -45,11 +77,43 @@ public class ChatRoom {
         this.lastMessage = lastMessage;
     }
 
+    public String getLastMessageType() {
+        return lastMessageType;
+    }
+
+    public void setLastMessageType(String lastMessageType) {
+        this.lastMessageType = lastMessageType;
+    }
+
     public String getTime() {
         return time;
     }
 
     public void setTime(String time) {
         this.time = time;
+    }
+
+    public long getUnreadCount() {
+        return unreadCount;
+    }
+
+    public void setUnreadCount(long unreadCount) {
+        this.unreadCount = unreadCount;
+    }
+
+    public String getInviteCode() {
+        return inviteCode;
+    }
+
+    public void setInviteCode(String inviteCode) {
+        this.inviteCode = inviteCode;
+    }
+
+    public String getInviteUrl() {
+        return inviteUrl;
+    }
+
+    public void setInviteUrl(String inviteUrl) {
+        this.inviteUrl = inviteUrl;
     }
 }
