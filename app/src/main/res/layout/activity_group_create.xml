@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/et_room_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="그룹 채팅방 이름 입력"
+        android:maxLength="25"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:inputType="text"
+        android:imeOptions="actionDone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_friend_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/btn_create_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="그룹 채팅 생성"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>

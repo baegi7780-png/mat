@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="10dp">
+
+    <TextView
+        android:id="@+id/tv_message_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_message_system_warm"
+        android:maxWidth="280dp"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:text="사용자가 입장했습니다."
+        android:textColor="#8A5A22"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.01"
+        android:elevation="1dp" />
+
+</LinearLayout>
