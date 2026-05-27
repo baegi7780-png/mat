@@ -214,17 +214,7 @@ public class MessageController {
                         message
                 );
 
-                if (currentUserId != null
-                        && currentUserId > 0
-                        && message.getSenderId() != null
-                        && !message.getSenderId().equals(
-                        currentUserId
-                )) {
 
-                    roomStateManager.updateReadStatus(
-                            currentUserId
-                    );
-                }
             });
         });
 
@@ -890,6 +880,18 @@ public class MessageController {
         );
     }
 
+
+    private void sendVideoMessage(
+            String videoUrl
+    ) {
+
+        sendMessage(
+                "🎥 동영상",
+                "VIDEO",
+                videoUrl
+        );
+    }
+
     private void sendMessage(
             String content,
             String messageType,
@@ -963,6 +965,16 @@ public class MessageController {
         imageManager.uploadAndSendImage(
                 imageUri,
                 this::sendImageMessage
+        );
+    }
+
+    public void uploadAndSendVideo(
+            Uri videoUri
+    ) {
+
+        imageManager.uploadAndSendVideo(
+                videoUri,
+                this::sendVideoMessage
         );
     }
 

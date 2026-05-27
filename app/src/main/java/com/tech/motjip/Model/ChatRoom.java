@@ -1,5 +1,7 @@
 package com.tech.motjip.Model;
 
+import java.util.List;
+
 public class ChatRoom {
 
     private Long roomId;
@@ -21,6 +23,8 @@ public class ChatRoom {
     private String inviteCode;
 
     private String inviteUrl;
+
+    private List<String> participantProfileImages;
 
     public ChatRoom() {
     }
@@ -116,4 +120,18 @@ public class ChatRoom {
     public void setInviteUrl(String inviteUrl) {
         this.inviteUrl = inviteUrl;
     }
+
+    public List<String> getParticipantProfileImages() {
+
+        return participantProfileImages;
+    }
+
+    public void setParticipantProfileImages(
+            List<String> participantProfileImages
+    ) {
+
+        this.participantProfileImages =
+                participantProfileImages;
+    }
+
 }

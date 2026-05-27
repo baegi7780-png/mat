@@ -21,14 +21,48 @@
         android:paddingEnd="14dp"
         android:paddingBottom="14dp">
 
-        <TextView
-            android:id="@+id/iv_profile"
+        <FrameLayout
+            android:id="@+id/profile_container"
             android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:background="@drawable/bg_chat_room_icon_warm"
-            android:gravity="center"
-            android:text="🍽"
-            android:textSize="23sp" />
+            android:layout_height="52dp">
+
+            <ImageView
+                android:id="@+id/iv_profile_1"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="top|start"
+                android:scaleType="centerCrop"
+                android:src="@drawable/default_profile"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/iv_profile_2"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="top|end"
+                android:scaleType="centerCrop"
+                android:src="@drawable/default_profile"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/iv_profile_3"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="bottom|start"
+                android:scaleType="centerCrop"
+                android:src="@drawable/default_profile"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/iv_profile_4"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="bottom|end"
+                android:scaleType="centerCrop"
+                android:src="@drawable/default_profile"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"

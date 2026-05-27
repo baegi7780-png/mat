@@ -15,6 +15,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Intent;
+import android.net.Uri;
+
+import java.util.List;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -32,6 +38,7 @@ import com.tech.motjip.Adapter.ParticipantAdapter;
 import com.tech.motjip.Controller.MessageController;
 import com.tech.motjip.Model.ChatRoom;
 import com.tech.motjip.Model.Participant;
+
 
 import java.util.List;
 
@@ -51,6 +58,7 @@ public class MessageActivity extends AppCompatActivity {
     private EditText etMessage;
     private Button btnSend;
     private ImageView btnSelectImage;
+
     private ImageView btnChatMenu;
     private LinearLayout layoutMemberPanel;
     private View viewMemberPanelDim;
@@ -133,12 +141,32 @@ public class MessageActivity extends AppCompatActivity {
                         if (uri != null
                                 && messageController != null) {
 
-                            messageController.uploadAndSendImage(
-                                    uri
-                            );
+                            String mimeType =
+                                    getContentResolver()
+                                            .getType(uri);
+
+                            if (mimeType != null
+                                    && mimeType.startsWith("video")) {
+
+                                messageController
+                                        .uploadAndSendVideo(
+                                                uri
+                                        );
+
+                            } else {
+
+                                messageController
+                                        .uploadAndSendImage(
+                                                uri
+                                        );
+                            }
                         }
                     }
             );
+
+
+
+
 
     @Override
     protected void onCreate(
@@ -162,6 +190,7 @@ public class MessageActivity extends AppCompatActivity {
         setContentView(
                 R.layout.activity_message
         );
+
 
         rootView =
                 findViewById(
@@ -212,6 +241,8 @@ public class MessageActivity extends AppCompatActivity {
                 findViewById(
                         R.id.btn_select_image
                 );
+
+
 
         layoutMemberPanel =
                 findViewById(
@@ -332,16 +363,23 @@ public class MessageActivity extends AppCompatActivity {
                         -1L
                 );
 
+        handleInviteLink();
+
         Intent intent =
                 getIntent();
 
-        if (!initializeRoomFromIntent(
-                intent
-        )) {
+        Uri deepLinkData =
+                intent.getData();
 
-            return;
+        if (deepLinkData == null) {
+
+            if (!initializeRoomFromIntent(
+                    intent
+            )) {
+
+                return;
+            }
         }
-
         messageController =
                 new MessageController(
                         this,
@@ -392,23 +430,9 @@ public class MessageActivity extends AppCompatActivity {
                 showLeaveChatRoomDialog()
         );
 
-        btnSelectImage.setOnClickListener(v -> {
 
-            if (messageController == null) {
 
-                Toast.makeText(
-                        this,
-                        "채팅방을 준비 중입니다.",
-                        Toast.LENGTH_SHORT
-                ).show();
 
-                return;
-            }
-
-            imagePickerLauncher.launch(
-                    "image/*"
-            );
-        });
 
         btnSend.setOnClickListener(v -> {
 
@@ -423,7 +447,48 @@ public class MessageActivity extends AppCompatActivity {
                 return;
             }
 
+
+
             messageController.sendMessageFromInput();
+        });
+
+        btnSelectImage.setOnClickListener(v -> {
+
+            if (messageController == null) {
+
+                Toast.makeText(
+                        this,
+                        "채팅방을 준비 중입니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            new AlertDialog.Builder(this)
+                    .setTitle("파일 선택")
+                    .setItems(
+                            new String[]{
+                                    "사진",
+                                    "동영상"
+                            },
+                            (dialog, which) -> {
+
+                                if (which == 0) {
+
+                                    imagePickerLauncher.launch(
+                                            "image/*"
+                                    );
+
+                                } else {
+
+                                    imagePickerLauncher.launch(
+                                            "video/*"
+                                    );
+                                }
+                            }
+                    )
+                    .show();
         });
 
         messageController.start();
@@ -747,6 +812,31 @@ public class MessageActivity extends AppCompatActivity {
                             return;
                         }
 
+                        String inviteUrl =
+                                targetRoom.getInviteUrl();
+
+                        ClipboardManager clipboard =
+                                (ClipboardManager)
+                                        getSystemService(
+                                                CLIPBOARD_SERVICE
+                                        );
+
+                        ClipData clip =
+                                ClipData.newPlainText(
+                                        "invite_link",
+                                        inviteUrl
+                                );
+
+                        clipboard.setPrimaryClip(
+                                clip
+                        );
+
+                        Toast.makeText(
+                                MessageActivity.this,
+                                "초대 링크가 복사되었습니다.",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
                         Intent shareIntent =
                                 new Intent(
                                         Intent.ACTION_SEND
@@ -758,8 +848,8 @@ public class MessageActivity extends AppCompatActivity {
 
                         shareIntent.putExtra(
                                 Intent.EXTRA_TEXT,
-                                "채팅방 초대 링크\n\n"
-                                        + targetRoom.getInviteUrl()
+                                "같이 밥 먹으러 와!\n\n"
+                                        + inviteUrl
                         );
 
                         startActivity(
@@ -1449,4 +1539,98 @@ public class MessageActivity extends AppCompatActivity {
 
         super.onDestroy();
     }
+
+    private void handleInviteLink() {
+
+        Intent intent =
+                getIntent();
+
+        Uri data =
+                intent.getData();
+
+        if (data == null) {
+
+            return;
+        }
+
+        List<String> segments =
+                data.getPathSegments();
+
+        if (segments.size() < 3) {
+
+            return;
+        }
+
+        String inviteCode =
+                segments.get(2);
+
+        joinRoomByInviteCode(
+                inviteCode
+        );
+    }
+    private void joinRoomByInviteCode(
+            String inviteCode
+    ) {
+
+        if (myMemberId == null
+                || myMemberId <= 0) {
+
+            Toast.makeText(
+                    this,
+                    "로그인 정보가 없습니다.",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        ApiService api =
+                RetrofitClient.getApiService(
+                        this
+                );
+
+        api.joinRoomByInviteCode(
+                inviteCode,
+                myMemberId
+        ).enqueue(new Callback<String>() {
+
+            @Override
+            public void onResponse(
+                    Call<String> call,
+                    Response<String> response
+            ) {
+
+                if (response.isSuccessful()) {
+
+                    Toast.makeText(
+                            MessageActivity.this,
+                            "채팅방에 참여했습니다.",
+                            Toast.LENGTH_SHORT
+                    ).show();
+
+                } else {
+
+                    Toast.makeText(
+                            MessageActivity.this,
+                            "채팅방 참여 실패",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+            }
+
+            @Override
+            public void onFailure(
+                    Call<String> call,
+                    Throwable t
+            ) {
+
+                Toast.makeText(
+                        MessageActivity.this,
+                        "서버 연결 실패",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+    }
+
 }

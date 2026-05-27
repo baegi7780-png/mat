@@ -9,9 +9,12 @@ public class Message {
 
     public static final String TYPE_IMAGE =
             "IMAGE";
-
+    public static final String TYPE_VIDEO =
+            "VIDEO";
     public static final String TYPE_SYSTEM =
             "SYSTEM";
+
+
 
     public static final String TYPE_DATE_HEADER =
             "DATE_HEADER";
@@ -262,4 +265,9 @@ public class Message {
 
         this.dateHeaderKey = dateHeaderKey;
     }
+
+
+
+
+
 }

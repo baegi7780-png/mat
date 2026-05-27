@@ -24,14 +24,18 @@ import retrofit2.Response;
 
 public class MessageImageManager {
 
-    private static final String TAG = "MessageImage";
+    private static final String TAG =
+            "MessageImage";
 
     private final MessageActivity activity;
 
-    public interface OnImageUploadListener {
+    /*
+     * IMAGE / VIDEO 공용 업로드 콜백
+     */
+    public interface OnFileUploadListener {
 
         void onUploaded(
-                String imageUrl
+                String fileUrl
         );
     }
 
@@ -42,27 +46,60 @@ public class MessageImageManager {
         this.activity = activity;
     }
 
+    /*
+     * 기존 이미지 업로드 유지
+     */
     public void uploadAndSendImage(
             Uri imageUri,
-            OnImageUploadListener listener
+            OnFileUploadListener listener
+    ) {
+
+        uploadAndSendFile(
+                imageUri,
+                listener
+        );
+    }
+
+    /*
+     * 동영상 업로드 추가
+     */
+    public void uploadAndSendVideo(
+            Uri videoUri,
+            OnFileUploadListener listener
+    ) {
+
+        uploadAndSendFile(
+                videoUri,
+                listener
+        );
+    }
+
+    /*
+     * IMAGE / VIDEO 공용 업로드
+     */
+    public void uploadAndSendFile(
+            Uri uri,
+            OnFileUploadListener listener
     ) {
 
         Log.d(
                 TAG,
-                "uploadAndSendImage uri = " + imageUri
+                "uploadAndSendFile uri = " + uri
         );
 
         try {
 
             String filePath =
-                    getRealPathFromUri(imageUri);
+                    getRealPathFromUri(
+                            uri
+                    );
 
             if (filePath == null
                     || filePath.trim().isEmpty()) {
 
                 Toast.makeText(
                         activity,
-                        "이미지를 불러올 수 없습니다.",
+                        "파일을 불러올 수 없습니다.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -72,10 +109,26 @@ public class MessageImageManager {
             File file =
                     new File(filePath);
 
+            /*
+             * image/* 또는 video/*
+             */
+            String mimeType =
+                    activity.getContentResolver()
+                            .getType(uri);
+
+            if (mimeType == null
+                    || mimeType.trim().isEmpty()) {
+
+                mimeType =
+                        "application/octet-stream";
+            }
+
             RequestBody requestFile =
                     RequestBody.create(
                             file,
-                            MediaType.parse("image/*")
+                            MediaType.parse(
+                                    mimeType
+                            )
                     );
 
             MultipartBody.Part body =
@@ -98,28 +151,31 @@ public class MessageImageManager {
                             if (response.isSuccessful()
                                     && response.body() != null) {
 
-                                String imageUrl =
-                                        response.body().getFileUrl();
+                                String fileUrl =
+                                        response.body()
+                                                .getFileUrl();
 
-                                if (imageUrl == null
-                                        || imageUrl.trim().isEmpty()) {
+                                if (fileUrl == null
+                                        || fileUrl.trim().isEmpty()) {
 
                                     Toast.makeText(
                                             activity,
-                                            "이미지 URL이 비어있습니다.",
+                                            "파일 URL이 비어있습니다.",
                                             Toast.LENGTH_SHORT
                                     ).show();
 
                                     return;
                                 }
 
-                                listener.onUploaded(imageUrl);
+                                listener.onUploaded(
+                                        fileUrl
+                                );
 
                             } else {
 
                                 Toast.makeText(
                                         activity,
-                                        "이미지 업로드 실패",
+                                        "파일 업로드 실패",
                                         Toast.LENGTH_SHORT
                                 ).show();
                             }
@@ -133,13 +189,13 @@ public class MessageImageManager {
 
                             Log.e(
                                     TAG,
-                                    "이미지 업로드 실패",
+                                    "파일 업로드 실패",
                                     t
                             );
 
                             Toast.makeText(
                                     activity,
-                                    "이미지 업로드 실패",
+                                    "파일 업로드 실패",
                                     Toast.LENGTH_SHORT
                             ).show();
                         }
@@ -149,13 +205,13 @@ public class MessageImageManager {
 
             Log.e(
                     TAG,
-                    "이미지 처리 실패",
+                    "파일 처리 실패",
                     e
             );
 
             Toast.makeText(
                     activity,
-                    "이미지 처리 실패",
+                    "파일 처리 실패",
                     Toast.LENGTH_SHORT
             ).show();
         }
@@ -186,7 +242,9 @@ public class MessageImageManager {
                 if (index != -1
                         && cursor.moveToFirst()) {
 
-                    return cursor.getString(index);
+                    return cursor.getString(
+                            index
+                    );
                 }
 
             } finally {

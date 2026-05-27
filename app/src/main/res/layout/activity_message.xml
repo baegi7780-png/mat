@@ -121,6 +121,9 @@
                 android:contentDescription="이미지 선택"
                 app:tint="#FF7A1A" />
 
+
+
+
             <EditText
                 android:id="@+id/et_message"
                 android:layout_width="0dp"

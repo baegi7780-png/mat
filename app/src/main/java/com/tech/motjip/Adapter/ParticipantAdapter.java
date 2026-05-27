@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.tech.motjip.API.RetrofitClient;
 import com.tech.motjip.Model.Participant;
 import com.tech.motjip.R;
 
@@ -105,11 +106,23 @@ public class ParticipantAdapter
                 nickname
         );
 
+
+        String profileUrl =
+                participant.getProfileImgUrl();
+
+        if (profileUrl != null
+                && !profileUrl.startsWith("http")) {
+
+            profileUrl =
+                    RetrofitClient.BASE_URL
+                            + profileUrl;
+        }
+
         Glide.with(
                         holder.itemView.getContext()
                 )
                 .load(
-                        participant.getProfileImgUrl()
+                        profileUrl
                 )
                 .placeholder(
                         R.drawable.people
@@ -117,6 +130,7 @@ public class ParticipantAdapter
                 .error(
                         R.drawable.people
                 )
+                .circleCrop()
                 .into(
                         holder.ivProfile
                 );

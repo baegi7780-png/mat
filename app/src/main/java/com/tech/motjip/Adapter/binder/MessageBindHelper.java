@@ -1,5 +1,6 @@
 package com.tech.motjip.Adapter.binder;
 
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +21,7 @@ public class MessageBindHelper {
             "__UNREAD_DIVIDER__";
 
     private static final String BASE_IMAGE_URL =
-            "https://spout-distant-cost.ngrok-free.dev";
+            "https://spiny-impure-laptop.ngrok-free.dev";
 
     private MessageBindHelper() {
     }
@@ -38,15 +39,27 @@ public class MessageBindHelper {
                         && message.getFileUrl() != null
                         && !message.getFileUrl().trim().isEmpty();
 
+        boolean isVideoMessage =
+                Message.TYPE_VIDEO.equalsIgnoreCase(
+                        message.getMessageType()
+                )
+                        && message.getFileUrl() != null
+                        && !message.getFileUrl().trim().isEmpty();
+
         if (isImageMessage) {
 
             if (tvMessageContent != null) {
-                tvMessageContent.setVisibility(View.GONE);
+
+                tvMessageContent.setVisibility(
+                        View.GONE
+                );
             }
 
             if (ivMessageImage != null) {
 
-                ivMessageImage.setVisibility(View.VISIBLE);
+                ivMessageImage.setVisibility(
+                        View.VISIBLE
+                );
 
                 String imageUrl =
                         buildImageUrl(
@@ -70,6 +83,51 @@ public class MessageBindHelper {
                 );
             }
 
+        } else if (isVideoMessage) {
+
+            if (tvMessageContent != null) {
+
+                tvMessageContent.setVisibility(
+                        View.GONE
+                );
+            }
+
+            if (ivMessageImage != null) {
+
+                ivMessageImage.setVisibility(
+                        View.VISIBLE
+                );
+
+                String videoUrl =
+                        buildImageUrl(
+                                message.getFileUrl()
+                        );
+
+                Glide.with(ivMessageImage.getContext())
+                        .load(videoUrl)
+                        .thumbnail(0.1f)
+                        .placeholder(R.drawable.default_profile)
+                        .error(R.drawable.default_profile)
+                        .centerCrop()
+                        .into(ivMessageImage);
+
+                ivMessageImage.setOnClickListener(v -> {
+
+                    android.content.Intent intent =
+                            new android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW
+                            );
+
+                    intent.setDataAndType(
+                            android.net.Uri.parse(videoUrl),
+                            "video/*"
+                    );
+
+                    ivMessageImage.getContext()
+                            .startActivity(intent);
+                });
+            }
+
         } else {
 
             if (ivMessageImage != null) {
@@ -78,17 +136,31 @@ public class MessageBindHelper {
                         .clear(ivMessageImage);
 
                 ivMessageImage.setOnClickListener(null);
-                ivMessageImage.setVisibility(View.GONE);
+
+                ivMessageImage.setVisibility(
+                        View.GONE
+                );
             }
 
             if (tvMessageContent != null) {
 
-                tvMessageContent.setVisibility(View.VISIBLE);
+                tvMessageContent.setVisibility(
+                        View.VISIBLE
+                );
 
                 tvMessageContent.setText(
                         message.getMessageContent() != null
                                 ? message.getMessageContent()
                                 : ""
+                );
+
+                Linkify.addLinks(
+                        tvMessageContent,
+                        Linkify.WEB_URLS
+                );
+
+                tvMessageContent.setLinksClickable(
+                        true
                 );
             }
         }
