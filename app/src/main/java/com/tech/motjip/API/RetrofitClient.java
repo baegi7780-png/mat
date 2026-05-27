@@ -124,19 +124,21 @@ public class RetrofitClient {
                 Request originalRequest =
                         chain.request();
 
+                String originalPath =
+                        originalRequest
+                                .url()
+                                .encodedPath();
+
                 Log.d(
                         TAG,
                         "요청 URL = "
-                                + originalRequest
-                                .url()
-                                .encodedPath()
+                                + originalPath
                 );
 
                 boolean isRefreshRequest =
-                        originalRequest
-                                .url()
-                                .encodedPath()
-                                .contains("/api/v1/auth/refresh");
+                        originalPath.contains(
+                                "/api/v1/auth/refresh"
+                        );
 
                 Log.d(
                         TAG,
@@ -179,9 +181,7 @@ public class RetrofitClient {
                         "응답 code = "
                                 + response.code()
                                 + ", path = "
-                                + originalRequest
-                                .url()
-                                .encodedPath()
+                                + originalPath
                 );
 
                 if (response.code() == 401
@@ -199,15 +199,16 @@ public class RetrofitClient {
 
                         Log.d(
                                 TAG,
-                                "RefreshToken 없음 → 로그인 화면 유지"
+                                "RefreshToken 없음 → 로그인 화면 이동"
                         );
 
-                        clearTokens(
+                        moveToLoginWithExpiredMessage(
+                                appContext,
                                 prefs
                         );
 
-                        return chain.proceed(
-                                originalRequest
+                        throw new IOException(
+                                "RefreshToken is empty"
                         );
                     }
 
@@ -234,8 +235,8 @@ public class RetrofitClient {
                                 prefs
                         );
 
-                        return chain.proceed(
-                                originalRequest
+                        throw new IOException(
+                                "Token refresh failed"
                         );
                     }
 
@@ -275,9 +276,7 @@ public class RetrofitClient {
                             "재시도 응답 code = "
                                     + retryResponse.code()
                                     + ", path = "
-                                    + originalRequest
-                                    .url()
-                                    .encodedPath()
+                                    + originalPath
                     );
 
                     return retryResponse;
@@ -410,14 +409,18 @@ public class RetrofitClient {
                             + refreshResponse.body()
             );
 
-            if (refreshResponse.errorBody() != null) {
+            if (!refreshResponse.isSuccessful()
+                    && refreshResponse.errorBody() != null) {
+
+                String errorBody =
+                        refreshResponse
+                                .errorBody()
+                                .string();
 
                 Log.e(
                         TAG,
                         "refresh error = "
-                                + refreshResponse
-                                .errorBody()
-                                .string()
+                                + errorBody
                 );
             }
 
@@ -558,7 +561,7 @@ public class RetrofitClient {
 
         intent.putExtra(
                 AUTH_EXPIRED_MESSAGE,
-                "다른 기기에서 로그인되어 로그아웃되었습니다."
+                "다시 로그인해 주세요."
         );
 
         context.startActivity(

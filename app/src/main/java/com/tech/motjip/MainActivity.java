@@ -22,6 +22,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import com.tech.motjip.API.ApiService;
 import com.tech.motjip.API.RetrofitClient;
+import com.tech.motjip.Auth.TokenManager;
 import com.tech.motjip.Controller.MainController;
 import com.tech.motjip.Dto.RequestDto.FcmTokenRequestDto;
 import com.tech.motjip.Dto.RequestDto.UpdateLocationRequestDto;
@@ -343,6 +344,79 @@ public class MainActivity extends BaseActivity
                         + user
         );
 
+        if (user == null) {
+
+            Log.e(
+                    TAG,
+                    "moveNextByUser 중단 - user null"
+            );
+
+            LoginStateManager.setLoginStatus(
+                    this,
+                    LoginStateManager.LOGOUT
+            );
+
+            initializeLoginScreen();
+
+            DialogUtil.showMessageDialog(
+                    this,
+                    R.drawable.fail,
+                    "로그인 실패",
+                    "사용자 정보를 받지 못했습니다.",
+                    null
+            );
+
+            return;
+        }
+
+        Log.d(
+                TAG,
+                "accessToken exists = "
+                        + (user.getAccessToken() != null
+                        && !user.getAccessToken().trim().isEmpty())
+        );
+
+        Log.d(
+                TAG,
+                "refreshToken exists = "
+                        + (user.getRefreshToken() != null
+                        && !user.getRefreshToken().trim().isEmpty())
+        );
+
+        /*
+         * 로그인 성공 직후 토큰 저장
+         *
+         * 닉네임이 이미 있는 사용자는 NicknameActivity를 거치지 않고
+         * 바로 HomeActivity로 이동하기 때문에 여기서 반드시 토큰을 저장해야 한다.
+         */
+        if (user.getAccessToken() != null
+                && !user.getAccessToken().trim().isEmpty()
+                && user.getRefreshToken() != null
+                && !user.getRefreshToken().trim().isEmpty()) {
+
+            TokenManager tokenManager =
+                    new TokenManager(
+                            this
+                    );
+
+            tokenManager.saveTokens(
+                    user.getAccessToken(),
+                    user.getRefreshToken()
+            );
+
+            Log.d(
+                    TAG,
+                    "로그인 성공 후 토큰 저장 완료"
+            );
+
+        } else {
+
+            Log.e(
+                    TAG,
+                    "로그인 응답에 토큰 없음"
+            );
+        }
+
         LoginStateManager.setLoginStatus(
                 this,
                 LoginStateManager.LOGIN
@@ -386,6 +460,11 @@ public class MainActivity extends BaseActivity
             intent.putExtra(
                     "member_id",
                     user.getMemberId()
+            );
+
+            intent.putExtra(
+                    "nickname",
+                    user.getNickname()
             );
 
             startActivity(
