@@ -27,9 +27,6 @@ public class MessageSyncManager {
                     Looper.getMainLooper()
             );
 
-    private boolean submitPending =
-            false;
-
     public MessageSyncManager(
             @NonNull MessageAdapter messageAdapter
     ) {
@@ -448,14 +445,6 @@ public class MessageSyncManager {
             return;
         }
 
-        if (submitPending) {
-
-            return;
-        }
-
-        submitPending =
-                true;
-
         List<Message> submitTarget =
                 copyMessageList(
                         messageList
@@ -465,15 +454,17 @@ public class MessageSyncManager {
 
             if (messageAdapter == null) {
 
-                submitPending =
-                        false;
-
                 return;
             }
 
             messageAdapter.submitList(
-                    submitTarget,
-                    () -> submitPending = false
+                    submitTarget
+            );
+
+            Log.d(
+                    TAG,
+                    "submitList 실행 size="
+                            + submitTarget.size()
             );
         });
     }

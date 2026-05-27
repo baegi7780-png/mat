@@ -1,11 +1,14 @@
 package com.tech.motjip;
 
+import android.graphics.Rect;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -17,6 +20,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -41,6 +45,7 @@ public class MessageActivity extends AppCompatActivity {
             "MessageActivity";
 
     private View rootView;
+    private LinearLayout layoutChatBody;
     private RecyclerView recyclerView;
     private LinearLayout layoutInput;
     private EditText etMessage;
@@ -144,8 +149,14 @@ public class MessageActivity extends AppCompatActivity {
                 savedInstanceState
         );
 
+        /*
+         * 키보드 처리는 WindowInsetsCompat에서 직접 처리한다.
+         *
+         * adjustResize가 기기별로 다르게 동작할 수 있으므로,
+         * layout_chat_body 전체에 ime/systemBars bottom 값을 직접 적용한다.
+         */
         getWindow().setSoftInputMode(
-                android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
         );
 
         setContentView(
@@ -155,6 +166,11 @@ public class MessageActivity extends AppCompatActivity {
         rootView =
                 findViewById(
                         R.id.root_message_layout
+                );
+
+        layoutChatBody =
+                findViewById(
+                        R.id.layout_chat_body
                 );
 
         ImageView btnBack =
@@ -238,6 +254,7 @@ public class MessageActivity extends AppCompatActivity {
                 );
 
         if (rootView == null
+                || layoutChatBody == null
                 || recyclerView == null
                 || layoutInput == null
                 || etMessage == null
@@ -286,6 +303,13 @@ public class MessageActivity extends AppCompatActivity {
                 new LinearLayoutManager(
                         this
                 )
+        );
+
+        setupKeyboardInsets();
+
+        Log.e(
+                TAG,
+                "setupKeyboardInsets 실행 직전"
         );
 
         setupKeyboardInsets();
@@ -408,13 +432,6 @@ public class MessageActivity extends AppCompatActivity {
 
         saveActiveChatRoom();
 
-        /*
-         * 최초 1:1 채팅방 생성 직후에는
-         * socket subscribe 타이밍보다 메시지 수신이 먼저 발생할 수 있습니다.
-         *
-         * 이 경우 첫 메시지를 놓칠 수 있으므로
-         * 최초 진입 안정화용으로 채팅 내역을 한 번 더 재조회합니다.
-         */
         recyclerView.postDelayed(() -> {
 
             if (messageController != null) {
@@ -1145,71 +1162,89 @@ public class MessageActivity extends AppCompatActivity {
 
     private void setupKeyboardInsets() {
 
+        Log.e(
+                TAG,
+                "setupKeyboardInsets 호출됨"
+        );
+
         ViewCompat.setOnApplyWindowInsetsListener(
                 rootView,
                 (view, insets) -> {
 
-                    int imeBottom =
-                            insets.getInsets(
-                                    WindowInsetsCompat.Type.ime()
-                            ).bottom;
-
-                    int systemBottom =
+                    Insets systemBars =
                             insets.getInsets(
                                     WindowInsetsCompat.Type.systemBars()
-                            ).bottom;
-
-                    int keyboardHeight =
-                            Math.max(
-                                    0,
-                                    imeBottom
                             );
 
-                    int bottomSafeMargin =
-                            systemBottom
-                                    + dpToPx(
-                                    8
+                    Insets ime =
+                            insets.getInsets(
+                                    WindowInsetsCompat.Type.ime()
                             );
 
-                    int moveY =
-                            Math.max(
-                                    0,
-                                    keyboardHeight - bottomSafeMargin
+                    Log.d(
+                            TAG,
+                            "IME 확인 "
+                                    + "imeVisible="
+                                    + insets.isVisible(
+                                    WindowInsetsCompat.Type.ime()
+                            )
+                                    + ", imeBottom="
+                                    + ime.bottom
+                                    + ", systemBottom="
+                                    + systemBars.bottom
+                    );
+
+                    Rect visibleFrame =
+                            new Rect();
+
+                    rootView.getWindowVisibleDisplayFrame(
+                            visibleFrame
+                    );
+
+                    int screenHeight =
+                            rootView.getRootView().getHeight();
+
+                    int fallbackKeyboardHeight =
+                            screenHeight - visibleFrame.bottom;
+
+                    Log.d(
+                            TAG,
+                            "Fallback 확인 "
+                                    + "screenHeight="
+                                    + screenHeight
+                                    + ", visibleBottom="
+                                    + visibleFrame.bottom
+                                    + ", fallbackKeyboardHeight="
+                                    + fallbackKeyboardHeight
+                    );
+
+                    boolean keyboardVisible =
+                            insets.isVisible(
+                                    WindowInsetsCompat.Type.ime()
                             );
 
-                    int inputHeight =
-                            layoutInput.getHeight();
+                    int bottomInset;
 
-                    int extraBottomPadding;
+                    if (keyboardVisible) {
 
-                    if (keyboardHeight > 0) {
-
-                        extraBottomPadding =
-                                moveY
-                                        + inputHeight
-                                        + bottomSafeMargin
-                                        - dpToPx(
-                                        130
-                                );
+                        bottomInset =
+                                ime.bottom;
 
                     } else {
 
-                        extraBottomPadding =
-                                inputHeight
-                                        + bottomSafeMargin
-                                        - dpToPx(
-                                        70
-                                );
+                        bottomInset =
+                                systemBars.bottom;
                     }
 
-                    if (extraBottomPadding < inputHeight) {
-
-                        extraBottomPadding =
-                                inputHeight;
-                    }
+                    layoutChatBody.setPadding(
+                            layoutChatBody.getPaddingLeft(),
+                            layoutChatBody.getPaddingTop(),
+                            layoutChatBody.getPaddingRight(),
+                            bottomInset
+                    );
 
                     layoutInput.setTranslationY(
-                            -moveY
+                            0f
                     );
 
                     recyclerView.setPadding(
@@ -1217,12 +1252,9 @@ public class MessageActivity extends AppCompatActivity {
                             recyclerView.getPaddingTop(),
                             recyclerView.getPaddingRight(),
                             defaultRecyclerBottomPadding
-                                    + extraBottomPadding
                     );
 
-                    if (keyboardHeight > 0) {
-
-                        scrollRecyclerViewToBottom();
+                    if (keyboardVisible) {
 
                         recyclerView.postDelayed(
                                 this::scrollRecyclerViewToBottom,
@@ -1235,8 +1267,24 @@ public class MessageActivity extends AppCompatActivity {
                         );
                     }
 
+                    Log.d(
+                            TAG,
+                            "Insets 적용 keyboardVisible="
+                                    + keyboardVisible
+                                    + ", systemBottom="
+                                    + systemBars.bottom
+                                    + ", imeBottom="
+                                    + ime.bottom
+                                    + ", bottomInset="
+                                    + bottomInset
+                    );
+
                     return insets;
                 }
+        );
+
+        ViewCompat.requestApplyInsets(
+                rootView
         );
     }
 
@@ -1275,19 +1323,6 @@ public class MessageActivity extends AppCompatActivity {
             );
 
         }, 60);
-    }
-
-    private int dpToPx(
-            int dp
-    ) {
-
-        return (int) (
-                dp
-                        * getResources()
-                        .getDisplayMetrics()
-                        .density
-                        + 0.5f
-        );
     }
 
     private void saveActiveChatRoom() {

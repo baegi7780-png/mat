@@ -70,93 +70,99 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_message_list"
+    <LinearLayout
+        android:id="@+id/layout_chat_body"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:paddingStart="4dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="4dp"
-        android:paddingBottom="18dp"
-        android:clipToPadding="false"
-        android:overScrollMode="never"
+        android:orientation="vertical"
         app:layout_constraintTop_toBottomOf="@id/view_toolbar_bottom_line"
-        app:layout_constraintBottom_toTopOf="@id/layout_input"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <LinearLayout
-        android:id="@+id/layout_input"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginBottom="52dp"
-        android:background="@drawable/bg_chat_input_bar"
-        android:elevation="6dp"
-        android:orientation="horizontal"
-        android:gravity="bottom"
-        android:paddingStart="10dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
-            android:id="@+id/btn_select_image"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_gravity="bottom"
-            android:background="@drawable/bg_chat_icon_button_warm"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="10dp"
-            android:src="@android:drawable/ic_menu_gallery"
-            android:contentDescription="이미지 선택"
-            app:tint="#FF7A1A" />
-
-        <EditText
-            android:id="@+id/et_message"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_message_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_chat_input_warm"
-            android:gravity="center_vertical|start"
-            android:hint="메시지를 입력하세요"
-            android:imeOptions="flagNoEnterAction"
-            android:inputType="textMultiLine|textCapSentences"
-            android:minHeight="48dp"
-            android:maxHeight="120dp"
-            android:maxLines="5"
-            android:overScrollMode="always"
-            android:paddingStart="16dp"
-            android:paddingTop="12dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="12dp"
-            android:scrollbars="vertical"
-            android:singleLine="false"
-            android:textColor="#241C14"
-            android:textColorHint="#B3A89B"
-            android:textSize="15sp" />
+            android:paddingStart="4dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="4dp"
+            android:paddingBottom="18dp"
+            android:clipToPadding="false"
+            android:overScrollMode="never" />
 
-        <Button
-            android:id="@+id/btn_send"
-            android:layout_width="68dp"
-            android:layout_height="48dp"
-            android:layout_gravity="bottom"
-            android:background="@drawable/bg_chat_send_button_warm"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:text="전송"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+        <LinearLayout
+            android:id="@+id/layout_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="0dp"
+            android:background="@drawable/bg_chat_input_bar"
+            android:elevation="6dp"
+            android:orientation="horizontal"
+            android:gravity="bottom"
+            android:paddingStart="10dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="10dp">
+
+            <ImageView
+                android:id="@+id/btn_select_image"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_chat_icon_button_warm"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="10dp"
+                android:src="@android:drawable/ic_menu_gallery"
+                android:contentDescription="이미지 선택"
+                app:tint="#FF7A1A" />
+
+            <EditText
+                android:id="@+id/et_message"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_chat_input_warm"
+                android:gravity="center_vertical|start"
+                android:hint="메시지를 입력하세요"
+                android:imeOptions="flagNoEnterAction"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minHeight="48dp"
+                android:maxHeight="120dp"
+                android:maxLines="5"
+                android:overScrollMode="always"
+                android:paddingStart="16dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="12dp"
+                android:scrollbars="vertical"
+                android:singleLine="false"
+                android:textColor="#241C14"
+                android:textColorHint="#B3A89B"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/btn_send"
+                android:layout_width="68dp"
+                android:layout_height="48dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_chat_send_button_warm"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="전송"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
