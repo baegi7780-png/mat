@@ -88,6 +88,19 @@ public class RetrofitClient {
                                 && !accessToken.trim().isEmpty())
                 );
 
+                if (accessToken != null
+                        && accessToken.length() > 20) {
+
+                    Log.d(
+                            TAG,
+                            "accessToken prefix = "
+                                    + accessToken.substring(
+                                    0,
+                                    20
+                            )
+                    );
+                }
+
                 Log.d(
                         TAG,
                         "refreshToken exists = "
@@ -95,14 +108,43 @@ public class RetrofitClient {
                                 && !refreshToken.trim().isEmpty())
                 );
 
+                if (refreshToken != null
+                        && refreshToken.length() > 20) {
+
+                    Log.d(
+                            TAG,
+                            "refreshToken prefix = "
+                                    + refreshToken.substring(
+                                    0,
+                                    20
+                            )
+                    );
+                }
+
                 Request originalRequest =
                         chain.request();
 
-                boolean isRefreshRequest =
+                String originalPath =
                         originalRequest
                                 .url()
-                                .encodedPath()
-                                .contains("/api/v1/auth/refresh");
+                                .encodedPath();
+
+                Log.d(
+                        TAG,
+                        "요청 URL = "
+                                + originalPath
+                );
+
+                boolean isRefreshRequest =
+                        originalPath.contains(
+                                "/api/v1/auth/refresh"
+                        );
+
+                Log.d(
+                        TAG,
+                        "isRefreshRequest = "
+                                + isRefreshRequest
+                );
 
                 Request.Builder requestBuilder =
                         originalRequest.newBuilder();
@@ -111,9 +153,21 @@ public class RetrofitClient {
                         && accessToken != null
                         && !accessToken.trim().isEmpty()) {
 
+                    Log.d(
+                            TAG,
+                            "Authorization Header 추가"
+                    );
+
                     requestBuilder.header(
                             "Authorization",
                             "Bearer " + accessToken
+                    );
+
+                } else {
+
+                    Log.d(
+                            TAG,
+                            "Authorization Header 추가 안함"
                     );
                 }
 
@@ -121,6 +175,14 @@ public class RetrofitClient {
                         chain.proceed(
                                 requestBuilder.build()
                         );
+
+                Log.d(
+                        TAG,
+                        "응답 code = "
+                                + response.code()
+                                + ", path = "
+                                + originalPath
+                );
 
                 if (response.code() == 401
                         && !isRefreshRequest) {
@@ -137,15 +199,23 @@ public class RetrofitClient {
 
                         Log.d(
                                 TAG,
-                                "RefreshToken 없음 → 로그인 화면 유지"
+                                "RefreshToken 없음 → 로그인 화면 이동"
                         );
 
-                        clearTokens(prefs);
+                        moveToLoginWithExpiredMessage(
+                                appContext,
+                                prefs
+                        );
 
-                        return chain.proceed(
-                                originalRequest
+                        throw new IOException(
+                                "RefreshToken is empty"
                         );
                     }
+
+                    Log.d(
+                            TAG,
+                            "RefreshToken 있음 → 토큰 재발급 시도"
+                    );
 
                     String newAccessToken =
                             refreshAccessToken(
@@ -165,8 +235,8 @@ public class RetrofitClient {
                                 prefs
                         );
 
-                        return chain.proceed(
-                                originalRequest
+                        throw new IOException(
+                                "Token refresh failed"
                         );
                     }
 
@@ -174,6 +244,18 @@ public class RetrofitClient {
                             TAG,
                             "토큰 재발급 성공 → 원래 요청 재시도"
                     );
+
+                    if (newAccessToken.length() > 20) {
+
+                        Log.d(
+                                TAG,
+                                "retry newAccessToken prefix = "
+                                        + newAccessToken.substring(
+                                        0,
+                                        20
+                                )
+                        );
+                    }
 
                     Request retryRequest =
                             originalRequest
@@ -184,9 +266,20 @@ public class RetrofitClient {
                                     )
                                     .build();
 
-                    return chain.proceed(
-                            retryRequest
+                    Response retryResponse =
+                            chain.proceed(
+                                    retryRequest
+                            );
+
+                    Log.d(
+                            TAG,
+                            "재시도 응답 code = "
+                                    + retryResponse.code()
+                                    + ", path = "
+                                    + originalPath
                     );
+
+                    return retryResponse;
                 }
 
                 return response;
@@ -206,14 +299,22 @@ public class RetrofitClient {
                                     60,
                                     TimeUnit.SECONDS
                             )
-                            .addInterceptor(authInterceptor)
-                            .addInterceptor(loggingInterceptor)
+                            .addInterceptor(
+                                    authInterceptor
+                            )
+                            .addInterceptor(
+                                    loggingInterceptor
+                            )
                             .build();
 
             retrofit =
                     new Retrofit.Builder()
-                            .baseUrl(BASE_URL)
-                            .client(httpClient)
+                            .baseUrl(
+                                    BASE_URL
+                            )
+                            .client(
+                                    httpClient
+                            )
                             .addConverterFactory(
                                     GsonConverterFactory.create()
                             )
@@ -240,6 +341,19 @@ public class RetrofitClient {
                     "refreshAccessToken 시작"
             );
 
+            if (refreshToken != null
+                    && refreshToken.length() > 20) {
+
+                Log.d(
+                        TAG,
+                        "refreshAccessToken refreshToken prefix = "
+                                + refreshToken.substring(
+                                0,
+                                20
+                        )
+                );
+            }
+
             OkHttpClient refreshClient =
                     new OkHttpClient.Builder()
                             .connectTimeout(
@@ -258,8 +372,12 @@ public class RetrofitClient {
 
             Retrofit refreshRetrofit =
                     new Retrofit.Builder()
-                            .baseUrl(BASE_URL)
-                            .client(refreshClient)
+                            .baseUrl(
+                                    BASE_URL
+                            )
+                            .client(
+                                    refreshClient
+                            )
                             .addConverterFactory(
                                     GsonConverterFactory.create()
                             )
@@ -291,14 +409,18 @@ public class RetrofitClient {
                             + refreshResponse.body()
             );
 
-            if (refreshResponse.errorBody() != null) {
+            if (!refreshResponse.isSuccessful()
+                    && refreshResponse.errorBody() != null) {
+
+                String errorBody =
+                        refreshResponse
+                                .errorBody()
+                                .string();
 
                 Log.e(
                         TAG,
                         "refresh error = "
-                                + refreshResponse
-                                .errorBody()
-                                .string()
+                                + errorBody
                 );
             }
 
@@ -314,8 +436,50 @@ public class RetrofitClient {
                 String newRefreshToken =
                         tokenResponse.getRefreshToken();
 
+                Log.d(
+                        TAG,
+                        "newAccessToken exists = "
+                                + (newAccessToken != null
+                                && !newAccessToken.trim().isEmpty())
+                );
+
+                Log.d(
+                        TAG,
+                        "newRefreshToken exists = "
+                                + (newRefreshToken != null
+                                && !newRefreshToken.trim().isEmpty())
+                );
+
+                if (newAccessToken != null
+                        && newAccessToken.length() > 20) {
+
+                    Log.d(
+                            TAG,
+                            "newAccessToken prefix = "
+                                    + newAccessToken.substring(
+                                    0,
+                                    20
+                            )
+                    );
+                }
+
+                if (newRefreshToken != null
+                        && newRefreshToken.length() > 20) {
+
+                    Log.d(
+                            TAG,
+                            "newRefreshToken prefix = "
+                                    + newRefreshToken.substring(
+                                    0,
+                                    20
+                            )
+                    );
+                }
+
                 if (newAccessToken == null
-                        || newRefreshToken == null) {
+                        || newAccessToken.trim().isEmpty()
+                        || newRefreshToken == null
+                        || newRefreshToken.trim().isEmpty()) {
 
                     Log.e(
                             TAG,
@@ -375,7 +539,14 @@ public class RetrofitClient {
             SharedPreferences prefs
     ) {
 
-        clearTokens(prefs);
+        Log.d(
+                TAG,
+                "moveToLoginWithExpiredMessage 실행"
+        );
+
+        clearTokens(
+                prefs
+        );
 
         Intent intent =
                 new Intent(
@@ -390,19 +561,35 @@ public class RetrofitClient {
 
         intent.putExtra(
                 AUTH_EXPIRED_MESSAGE,
-                "다른 기기에서 로그인되어 로그아웃되었습니다."
+                "다시 로그인해 주세요."
         );
 
-        context.startActivity(intent);
+        context.startActivity(
+                intent
+        );
     }
 
     private static void clearTokens(
             SharedPreferences prefs
     ) {
 
+        Log.d(
+                TAG,
+                "토큰 삭제 실행"
+        );
+
         prefs.edit()
-                .remove(ACCESS_TOKEN)
-                .remove(REFRESH_TOKEN)
+                .remove(
+                        ACCESS_TOKEN
+                )
+                .remove(
+                        REFRESH_TOKEN
+                )
                 .apply();
+
+        Log.d(
+                TAG,
+                "토큰 삭제 완료"
+        );
     }
 }

@@ -14,15 +14,21 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.tech.motjip.API.HttpHelper.GetJsonAsync;
+import com.tech.motjip.API.RetrofitClient;
 import com.tech.motjip.Model.KeywordMapVO;
 import com.tech.motjip.Model.PlaceDetailModel.MenuVO;
 import com.tech.motjip.Model.PlaceDetailModel.PlaceDetailVO;
 import com.tech.motjip.Model.PlaceDetailModel.ReviewVO;
+import com.tech.motjip.Model.Review;
 import com.tech.motjip.R;
 import com.tech.motjip.Thread.IThreadReturn1Callback;
 import com.tech.motjip.WriteActivity;
 
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeDetailManager {
 
@@ -54,6 +60,12 @@ public class HomeDetailManager {
     private int photoLoadedCount;
 
     private static final int PHOTO_PAGE_SIZE = 12;
+
+    public interface ReviewListCallback {
+        void onResult(
+                List<Review> reviews
+        );
+    }
 
     public HomeDetailManager(
             Fragment fragment,
@@ -335,6 +347,139 @@ public class HomeDetailManager {
                     }
                 }
         );
+    }
+
+    /*
+     * 리뷰2 서버 후기 조회
+     */
+    public void getReviews(
+            Long placeId,
+            Long memberId,
+            ReviewListCallback callback
+    ) {
+
+        Log.d(
+                TAG,
+                "getReviews() 호출"
+        );
+
+        Log.d(
+                TAG,
+                "placeId = "
+                        + placeId
+        );
+
+        Log.d(
+                TAG,
+                "memberId = "
+                        + memberId
+        );
+
+        if (callback == null) {
+
+            Log.e(
+                    TAG,
+                    "getReviews() callback null"
+            );
+
+            return;
+        }
+
+        if (placeId == null
+                || placeId <= 0) {
+
+            Log.e(
+                    TAG,
+                    "getReviews() placeId invalid"
+            );
+
+            callback.onResult(
+                    null
+            );
+
+            return;
+        }
+
+        if (memberId == null
+                || memberId <= 0) {
+
+            Log.e(
+                    TAG,
+                    "getReviews() memberId invalid"
+            );
+
+            callback.onResult(
+                    null
+            );
+
+            return;
+        }
+
+        RetrofitClient
+                .getApiService(
+                        fragment.requireContext()
+                )
+                .getReviews(
+                        placeId,
+                        memberId
+                )
+                .enqueue(
+                        new Callback<List<Review>>() {
+
+                            @Override
+                            public void onResponse(
+                                    Call<List<Review>> call,
+                                    Response<List<Review>> response
+                            ) {
+
+                                if (response.isSuccessful()) {
+
+                                    Log.d(
+                                            TAG,
+                                            "getReviews() 성공 count = "
+                                                    + (
+                                                    response.body() == null
+                                                            ? 0
+                                                            : response.body().size()
+                                            )
+                                    );
+
+                                    callback.onResult(
+                                            response.body()
+                                    );
+
+                                } else {
+
+                                    Log.e(
+                                            TAG,
+                                            "getReviews() 실패 code = "
+                                                    + response.code()
+                                    );
+
+                                    callback.onResult(
+                                            null
+                                    );
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(
+                                    Call<List<Review>> call,
+                                    Throwable t
+                            ) {
+
+                                Log.e(
+                                        TAG,
+                                        "getReviews() 서버 연결 실패",
+                                        t
+                                );
+
+                                callback.onResult(
+                                        null
+                                );
+                            }
+                        }
+                );
     }
 
     private void clearDetailViews() {

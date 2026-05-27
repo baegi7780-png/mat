@@ -383,16 +383,43 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="#F7F5F2"
-                android:gravity="center"
                 android:orientation="vertical"
+                android:padding="12dp"
                 android:visibility="gone">
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_write_review2"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="✎ 후기 작성하기"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="#F19E39"
+                    app:cornerRadius="26dp"
+                    app:elevation="0dp" />
+
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:id="@+id/tv_review2_empty"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="리뷰2 탭 내용"
-                    android:textColor="#777777"
-                    android:textSize="20sp" />
+                    android:gravity="center"
+                    android:padding="32dp"
+                    android:text="리뷰 없음"
+                    android:textColor="#999999"
+                    android:textSize="16sp"
+                    android:visibility="gone" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_place_reviews"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    android:paddingBottom="24dp" />
 
             </LinearLayout>
 

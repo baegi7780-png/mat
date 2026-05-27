@@ -26,6 +26,8 @@ import com.tech.motjip.Model.CommunityPost;
 import com.tech.motjip.Model.Message;
 import com.tech.motjip.Model.NotificationItem;
 import com.tech.motjip.Model.Participant;
+import com.tech.motjip.Model.RecommendedPlace;
+import com.tech.motjip.Model.Review;
 import com.tech.motjip.Model.UploadResponse;
 import com.tech.motjip.Model.User;
 
@@ -36,14 +38,13 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
 import retrofit2.Call;
-
 import retrofit2.http.Body;
+import retrofit2.http.POST;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.HTTP;
 import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
-import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -375,5 +376,74 @@ public interface ApiService {
     @POST("/api/v1/community-invites/{communityInviteId}/cancel")
     Call<Void> cancelCommunityInvite(
             @Path("communityInviteId") Long communityInviteId
+    );
+
+    /*
+     * 후기 등록
+     * 이미지가 없는 경우 image 파라미터는 null 가능
+     */
+    @Multipart
+    @POST("/api/reviews")
+    Call<Void> createReview(
+            @Part("placeId") RequestBody placeId,
+            @Part("placeName") RequestBody placeName,
+            @Part("latitude") RequestBody latitude,
+            @Part("longitude") RequestBody longitude,
+            @Part("memberId") RequestBody memberId,
+            @Part("rating") RequestBody rating,
+            @Part("revisit") RequestBody revisit,
+            @Part("content") RequestBody content,
+            @Part("tags") RequestBody tags,
+            @Part MultipartBody.Part image
+    );
+
+    /*
+     * 특정 장소 후기 목록 조회
+     * memberId:
+     * 현재 로그인 사용자
+     * mine 여부 판별용
+     */
+    @GET("/api/reviews/{placeId}")
+    Call<List<Review>> getReviews(
+            @Path("placeId") Long placeId,
+            @Query("memberId") Long memberId
+    );
+
+    /*
+     * 추천 장소 조회
+     *
+     * 조건:
+     * - 평균 평점 4.5 이상
+     * - 랜덤 사용자 프로필 포함
+     * - 평균 평점 소수점 첫째 자리
+     */
+    @GET("/api/reviews/recommended")
+    Call<List<RecommendedPlace>> getRecommendedPlaces();
+
+    /*
+     * 후기 수정
+     */
+    @Multipart
+    @PATCH("/api/reviews/{reviewId}")
+    Call<Void> updateReview(
+            @Path("reviewId") Long reviewId,
+            @Part("placeName") RequestBody placeName,
+            @Part("latitude") RequestBody latitude,
+            @Part("longitude") RequestBody longitude,
+            @Part("memberId") RequestBody memberId,
+            @Part("rating") RequestBody rating,
+            @Part("revisit") RequestBody revisit,
+            @Part("content") RequestBody content,
+            @Part("tags") RequestBody tags,
+            @Part MultipartBody.Part image
+    );
+
+    /*
+     * 후기 삭제
+     */
+    @DELETE("/api/reviews/{reviewId}")
+    Call<Void> deleteReview(
+            @Path("reviewId") Long reviewId,
+            @Query("memberId") Long memberId
     );
 }

@@ -3,7 +3,13 @@ package com.tech.motjip.API.KakaoMap;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 
 import com.kakao.vectormap.KakaoMap;
 import com.kakao.vectormap.LatLng;
@@ -18,9 +24,17 @@ import com.kakao.vectormap.label.LabelStyle;
 import com.kakao.vectormap.label.LabelStyles;
 import com.kakao.vectormap.label.LabelTextBuilder;
 import com.tech.motjip.API.KakaoMap.CallbackInterface.IViewDetailItemClickCallback;
+import com.tech.motjip.API.RetrofitClient;
 import com.tech.motjip.Model.KeywordMapVO;
+import com.tech.motjip.Model.RecommendedPlace;
 import com.tech.motjip.R;
 
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -28,6 +42,22 @@ import javax.annotation.Nonnull;
 import lombok.NonNull;
 
 public class KakaoMapHandler {
+
+    private static final String TAG =
+            "KakaoMapHandlerDebug";
+
+    private static final int RECOMMEND_MARKER_SIZE =
+            130;
+
+    private static final int RECOMMEND_RATING_TEXT_SIZE =
+            34;
+
+    private static final int RECOMMEND_RATING_TEXT_COLOR =
+            Color.rgb(
+                    255,
+                    193,
+                    7
+            );
 
     private final KakaoMap kakaoMap;
 
@@ -39,92 +69,303 @@ public class KakaoMapHandler {
 
     private final ClusterManager clusterManager;
 
-    private int lastZoomLevel = -1;  // 줌 변경 감지용
+    private final Handler mainHandler =
+            new Handler(
+                    Looper.getMainLooper()
+            );
 
-    public KakaoMapHandler(KakaoMap kakaomap, Context context) {
+    private final List<Label> recommendedLabels =
+            new ArrayList<>();
 
-        this.kakaoMap = kakaomap;
-        this.context = context;
-        this.labelStyle = getDefaultLabelStyle();
-        this.clusterStyle = getClusterLabelStyle();
-        this.clusterManager = new ClusterManager(kakaoMap, labelStyle, clusterStyle);
+    private int lastZoomLevel =
+            -1;
+
+    public KakaoMapHandler(
+            KakaoMap kakaomap,
+            Context context
+    ) {
+
+        this.kakaoMap =
+                kakaomap;
+
+        this.context =
+                context;
+
+        this.labelStyle =
+                getDefaultLabelStyle();
+
+        this.clusterStyle =
+                getClusterLabelStyle();
+
+        this.clusterManager =
+                new ClusterManager(
+                        kakaoMap,
+                        labelStyle,
+                        clusterStyle
+                );
 
         setupCameraListener();
     }
 
-    // 카카오맵 객체를 반환합니다.
     public KakaoMap getKakaoMap() {
 
         return kakaoMap;
     }
 
-    // 카메라를 이동시킵니다.
-    // https://apis.map.kakao.com/android_v2/docs/getting-started/precautions/#2-api-의-비동기-처리
-    public void moveCamera(@NonNull LatLng position) {
+    public void moveCamera(
+            @NonNull LatLng position
+    ) {
 
-        kakaoMap.moveCamera(CameraUpdateFactory.newCenterPosition(position));
+        kakaoMap.moveCamera(
+                CameraUpdateFactory.newCenterPosition(
+                        position
+                )
+        );
     }
 
-    // 맵에 마커를 찍습니다. (테스트용 - vo 없는 버전)
-    // https://apis.map.kakao.com/android_v2/docs/api-guide/label/label/#1-label-생성하기
-    public void setMarker(@Nonnull LatLng position, String labelText) {
+    public void setMarker(
+            @Nonnull LatLng position,
+            String labelText
+    ) {
 
-        setMarker(position, labelText, null);
+        setMarker(
+                position,
+                labelText,
+                null
+        );
     }
 
-    // @오버로드 맵에 마커를 찍고 KeywordMapVO를 라벨에 tag로 보관합니다 (클릭 추적용).
-    public void setMarker(@Nonnull LatLng position, String labelText, KeywordMapVO vo) {
+    public void setMarker(
+            @Nonnull LatLng position,
+            String labelText,
+            KeywordMapVO vo
+    ) {
 
-        // 클러스터 구현 필요
-        LabelLayer layer = kakaoMap.getLabelManager().getLayer("MyClusterLayer");
+        LabelLayer layer =
+                kakaoMap
+                        .getLabelManager()
+                        .getLayer(
+                                "MyClusterLayer"
+                        );
 
         if (layer == null) {
 
             LabelLayerOptions layerOptions =
-                    LabelLayerOptions.from("MyClusterLayer")
-                            .setCompetitionType(CompetitionType.SameLower) // 같은 레이어 안의 마커끼리 경쟁
-                            .setCompetitionUnit(CompetitionUnit.IconAndText) // 아이콘이나 글씨가 겹치면 숨김
-                            .setZOrder(10000); // 기본 레이어보다 위에 그려지도록 설정
+                    LabelLayerOptions.from(
+                                    "MyClusterLayer"
+                            )
+                            .setCompetitionType(
+                                    CompetitionType.SameLower
+                            )
+                            .setCompetitionUnit(
+                                    CompetitionUnit.IconAndText
+                            )
+                            .setZOrder(
+                                    10000
+                            );
 
-            layer = kakaoMap.getLabelManager().addLayer(layerOptions);
+            layer =
+                    kakaoMap
+                            .getLabelManager()
+                            .addLayer(
+                                    layerOptions
+                            );
         }
 
         LabelOptions options =
-                LabelOptions.from(position)
-                        .setStyles(labelStyle);
+                LabelOptions.from(
+                                position
+                        )
+                        .setStyles(
+                                labelStyle
+                        );
 
-        Label label = layer.addLabel(options);
+        Label label =
+                layer.addLabel(
+                        options
+                );
 
-        // 클릭 시 어떤 가게인지 알 수 있도록 vo를 tag로 보관
         if (vo != null) {
 
-            label.setTag(vo);
+            label.setTag(
+                    vo
+            );
         }
 
-        // https://apis.map.kakao.com/android_v2/docs/api-guide/label/label/#스타일-및-텍스트-변경
-        // 이부분 api문서에없음...LabelTextBuilder 클래스에 대한 확인 필요
-        label.changeText(new LabelTextBuilder().setTexts(labelText));
-
-        // 주변 마커들 숨김 마커가 주변의 지도 그림위에 올라가있음 마커 주변으로 폴리곤을 그려서 지도를 덮어쓰든지 아예 다없애든지...
-        // kakaoMap.setPoiVisible(false);
+        label.changeText(
+                new LabelTextBuilder()
+                        .setTexts(
+                                labelText
+                        )
+        );
     }
 
-    // 현재 위치 마커를 찍습니다.
-    public Label setMyLocationMarker(@Nonnull LatLng position) {
+    public void setRecommendedMarkers(
+            List<RecommendedPlace> places
+    ) {
 
-        LabelLayer layer = kakaoMap.getLabelManager().getLayer("MyLocationLayer");
+        Log.d(
+                TAG,
+                "setRecommendedMarkers 호출 size = "
+                        + (
+                        places == null
+                                ? 0
+                                : places.size()
+                )
+        );
+
+        clearRecommendedMarkers();
+
+        if (places == null
+                || places.isEmpty()) {
+
+            return;
+        }
+
+        LabelLayer layer =
+                getRecommendedLayer();
+
+        for (RecommendedPlace place : places) {
+
+            if (place == null
+                    || place.getLatitude() == null
+                    || place.getLongitude() == null) {
+
+                Log.e(
+                        TAG,
+                        "추천 장소 좌표 없음"
+                );
+
+                continue;
+            }
+
+            LatLng position =
+                    LatLng.from(
+                            place.getLatitude(),
+                            place.getLongitude()
+                    );
+
+            KeywordMapVO vo =
+                    convertRecommendedPlaceToKeywordMapVO(
+                            place
+                    );
+
+            String ratingText =
+                    place.getFormattedAverageRating();
+
+            if (ratingText == null
+                    || ratingText.trim().isEmpty()) {
+
+                ratingText =
+                        "";
+            }
+
+            Bitmap defaultBitmap =
+                    getDefaultRecommendedMarkerBitmap();
+
+            LabelStyles defaultStyle =
+                    createRecommendedLabelStyle(
+                            defaultBitmap
+                    );
+
+            LabelOptions options =
+                    LabelOptions.from(
+                                    position
+                            )
+                            .setStyles(
+                                    defaultStyle
+                            );
+
+            Label label =
+                    layer.addLabel(
+                            options
+                    );
+
+            label.setTag(
+                    vo
+            );
+
+            label.changeText(
+                    new LabelTextBuilder()
+                            .setTexts(
+                                    "★ " + ratingText
+                            )
+            );
+
+            recommendedLabels.add(
+                    label
+            );
+
+            Log.d(
+                    TAG,
+                    "추천 profileImageUrl = "
+                            + place.getProfileImageUrl()
+            );
+
+            loadProfileImageAndApplyToLabel(
+                    label,
+                    place.getProfileImageUrl()
+            );
+        }
+    }
+
+    public void clearRecommendedMarkers() {
+
+        for (Label label : recommendedLabels) {
+
+            if (label == null) {
+                continue;
+            }
+
+            try {
+
+                label.remove();
+
+            } catch (Exception e) {
+
+                Log.e(
+                        TAG,
+                        "추천 마커 제거 실패",
+                        e
+                );
+            }
+        }
+
+        recommendedLabels.clear();
+    }
+
+    public Label setMyLocationMarker(
+            @Nonnull LatLng position
+    ) {
+
+        LabelLayer layer =
+                kakaoMap
+                        .getLabelManager()
+                        .getLayer(
+                                "MyLocationLayer"
+                        );
 
         if (layer == null) {
 
             LabelLayerOptions layerOptions =
-                    LabelLayerOptions.from("MyLocationLayer")
-                            .setCompetitionType(CompetitionType.None) // 현재 위치 마커는 다른 마커와 경쟁하지 않음
-                            .setZOrder(20000); // 검색 마커보다 위에 그려지도록 설정
+                    LabelLayerOptions.from(
+                                    "MyLocationLayer"
+                            )
+                            .setCompetitionType(
+                                    CompetitionType.None
+                            )
+                            .setZOrder(
+                                    20000
+                            );
 
-            layer = kakaoMap.getLabelManager().addLayer(layerOptions);
+            layer =
+                    kakaoMap
+                            .getLabelManager()
+                            .addLayer(
+                                    layerOptions
+                            );
         }
 
-        // 현재 위치 마커 이미지를 실제 64x64 크기로 줄입니다.
         Bitmap originalBitmap =
                 BitmapFactory.decodeResource(
                         context.getResources(),
@@ -140,7 +381,8 @@ public class KakaoMapHandler {
                 );
 
         LabelStyles myLocationStyle =
-                kakaoMap.getLabelManager()
+                kakaoMap
+                        .getLabelManager()
                         .addLabelStyles(
                                 LabelStyles.from(
                                         LabelStyle.from(
@@ -150,71 +392,89 @@ public class KakaoMapHandler {
                         );
 
         LabelOptions options =
-                LabelOptions.from(position)
-                        .setStyles(myLocationStyle);
+                LabelOptions.from(
+                                position
+                        )
+                        .setStyles(
+                                myLocationStyle
+                        );
 
-        return layer.addLabel(options);
+        return layer.addLabel(
+                options
+        );
     }
 
-    // 검색 결과 마커 목록을 통째로 설정합니다 (클러스터링 적용).
-    public void setMarkers(List<KeywordMapVO> markers) {
+    public void setMarkers(
+            List<KeywordMapVO> markers
+    ) {
 
-        clusterManager.setMarkers(markers);
+        clusterManager.setMarkers(
+                markers
+        );
 
-        lastZoomLevel = kakaoMap.getZoomLevel();
+        lastZoomLevel =
+                kakaoMap.getZoomLevel();
     }
 
-    // 마커 클릭 이벤트 리스너를 등록합니다.
-    public void setMarkerClickListener(IViewDetailItemClickCallback callback) {
+    public void setMarkerClickListener(
+            IViewDetailItemClickCallback callback
+    ) {
 
-        kakaoMap.setOnLabelClickListener(new KakaoMap.OnLabelClickListener() {
+        kakaoMap.setOnLabelClickListener(
+                new KakaoMap.OnLabelClickListener() {
 
-            @Override
-            public boolean onLabelClicked(KakaoMap kakaoMap, LabelLayer labelLayer, Label label) {
+                    @Override
+                    public boolean onLabelClicked(
+                            KakaoMap kakaoMap,
+                            LabelLayer labelLayer,
+                            Label label
+                    ) {
 
-                Object tag = label.getTag();
+                        Object tag =
+                                label.getTag();
 
-                if (tag instanceof KeywordMapVO && callback != null) {
+                        if (tag instanceof KeywordMapVO
+                                && callback != null) {
 
-                    // 일반 마커 클릭 — 상세페이지 열기
-                    callback.onItemClick((KeywordMapVO) tag);
+                            callback.onItemClick(
+                                    (KeywordMapVO) tag
+                            );
 
-                } else if (tag instanceof List) {
+                        } else if (tag instanceof List) {
 
-                    // 클러스터 마커 클릭 — 줌 인 (자동으로 카메라 이벤트 발생 → 재계산)
-                    zoomInOnCluster();
+                            zoomInOnCluster();
+                        }
+
+                        return true;
+                    }
                 }
-
-                return true;
-            }
-        });
+        );
     }
 
-    // 지도 위의 모든 마커를 초기화합니다.
     public void clearMarkers() {
 
         clusterManager.clear();
     }
 
-    // 줌 변경될 때만 클러스터 재계산 (단순 이동은 무시)
     private void setupCameraListener() {
 
-        kakaoMap.setOnCameraMoveEndListener((map, cameraPosition, gestureType) -> {
+        kakaoMap.setOnCameraMoveEndListener(
+                (map, cameraPosition, gestureType) -> {
 
-            int currentZoom =
-                    kakaoMap.getZoomLevel();
+                    int currentZoom =
+                            kakaoMap.getZoomLevel();
 
-            if (currentZoom != lastZoomLevel) {
+                    if (currentZoom != lastZoomLevel) {
 
-                lastZoomLevel =
-                        currentZoom;
+                        lastZoomLevel =
+                                currentZoom;
 
-                clusterManager.redraw();
-            }
-        });
+                        clusterManager.redraw();
+                    }
+                }
+        );
     }
 
-    // 클러스터 마커 클릭 시 두 단계 줌 인 → 카메라 이벤트 트리거되어 자동 재계산됨
     private void zoomInOnCluster() {
 
         int currentZoom =
@@ -227,11 +487,510 @@ public class KakaoMapHandler {
         );
     }
 
-    // 기본 마커 스타일을 가져옵니다.
+    private LabelLayer getRecommendedLayer() {
+
+        LabelLayer layer =
+                kakaoMap
+                        .getLabelManager()
+                        .getLayer(
+                                "RecommendedLayer"
+                        );
+
+        if (layer == null) {
+
+            LabelLayerOptions layerOptions =
+                    LabelLayerOptions.from(
+                                    "RecommendedLayer"
+                            )
+                            .setCompetitionType(
+                                    CompetitionType.None
+                            )
+                            .setZOrder(
+                                    15000
+                            );
+
+            layer =
+                    kakaoMap
+                            .getLabelManager()
+                            .addLayer(
+                                    layerOptions
+                            );
+        }
+
+        return layer;
+    }
+
+    private void loadProfileImageAndApplyToLabel(
+            Label label,
+            String profileImageUrl
+    ) {
+
+        if (label == null) {
+            return;
+        }
+
+        if (profileImageUrl == null
+                || profileImageUrl.trim().isEmpty()) {
+
+            return;
+        }
+
+        new Thread(() -> {
+
+            try {
+
+                String fullUrl =
+                        makeFullImageUrl(
+                                profileImageUrl
+                        );
+
+                Log.d(
+                        TAG,
+                        "추천 프로필 fullUrl = "
+                                + fullUrl
+                );
+
+                Bitmap bitmap =
+                        downloadBitmap(
+                                fullUrl
+                        );
+
+                if (bitmap == null) {
+                    return;
+                }
+
+                Bitmap markerBitmap =
+                        createCircleMarkerBitmap(
+                                bitmap,
+                                RECOMMEND_MARKER_SIZE
+                        );
+
+                mainHandler.post(() -> {
+
+                    try {
+
+                        LabelStyles profileStyle =
+                                createRecommendedLabelStyle(
+                                        markerBitmap
+                                );
+
+                        label.changeStyles(
+                                profileStyle
+                        );
+
+                    } catch (Exception e) {
+
+                        Log.e(
+                                TAG,
+                                "프로필 마커 스타일 적용 실패",
+                                e
+                        );
+                    }
+                });
+
+            } catch (Exception e) {
+
+                Log.e(
+                        TAG,
+                        "프로필 이미지 로드 실패",
+                        e
+                );
+            }
+        }).start();
+    }
+
+    private String makeFullImageUrl(
+            String imageUrl
+    ) {
+
+        if (imageUrl == null) {
+            return "";
+        }
+
+        if (imageUrl.startsWith("http://")
+                || imageUrl.startsWith("https://")) {
+
+            return imageUrl;
+        }
+
+        String baseUrl =
+                RetrofitClient.BASE_URL;
+
+        if (baseUrl.endsWith("/")
+                && imageUrl.startsWith("/")) {
+
+            return baseUrl.substring(
+                    0,
+                    baseUrl.length() - 1
+            ) + imageUrl;
+        }
+
+        if (!baseUrl.endsWith("/")
+                && !imageUrl.startsWith("/")) {
+
+            return baseUrl + "/" + imageUrl;
+        }
+
+        return baseUrl + imageUrl;
+    }
+
+    private Bitmap downloadBitmap(
+            String imageUrl
+    ) {
+
+        HttpURLConnection connection =
+                null;
+
+        InputStream inputStream =
+                null;
+
+        try {
+
+            URL url =
+                    new URL(
+                            imageUrl
+                    );
+
+            connection =
+                    (HttpURLConnection) url.openConnection();
+
+            connection.setConnectTimeout(
+                    5000
+            );
+
+            connection.setReadTimeout(
+                    5000
+            );
+
+            connection.setDoInput(
+                    true
+            );
+
+            connection.connect();
+
+            int responseCode =
+                    connection.getResponseCode();
+
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+
+                Log.e(
+                        TAG,
+                        "이미지 다운로드 실패 code = "
+                                + responseCode
+                );
+
+                return null;
+            }
+
+            inputStream =
+                    connection.getInputStream();
+
+            return BitmapFactory.decodeStream(
+                    inputStream
+            );
+
+        } catch (Exception e) {
+
+            Log.e(
+                    TAG,
+                    "downloadBitmap 실패",
+                    e
+            );
+
+            return null;
+
+        } finally {
+
+            try {
+
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+
+            } catch (Exception ignore) {
+            }
+
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    private Bitmap getDefaultRecommendedMarkerBitmap() {
+
+        Bitmap originalBitmap =
+                BitmapFactory.decodeResource(
+                        context.getResources(),
+                        R.drawable.ic_my_location_person
+                );
+
+        return createCircleMarkerBitmap(
+                originalBitmap,
+                RECOMMEND_MARKER_SIZE
+        );
+    }
+
+    private LabelStyles createRecommendedLabelStyle(
+            Bitmap bitmap
+    ) {
+
+        return kakaoMap
+                .getLabelManager()
+                .addLabelStyles(
+                        LabelStyles.from(
+                                LabelStyle.from(
+                                        bitmap
+                                ).setTextStyles(
+                                        RECOMMEND_RATING_TEXT_SIZE,
+                                        RECOMMEND_RATING_TEXT_COLOR
+                                )
+                        )
+                );
+    }
+
+    private Bitmap createCircleMarkerBitmap(
+            Bitmap source,
+            int size
+    ) {
+
+        if (source == null) {
+
+            source =
+                    BitmapFactory.decodeResource(
+                            context.getResources(),
+                            R.drawable.ic_my_location_person
+                    );
+        }
+
+        Bitmap scaledBitmap =
+                Bitmap.createScaledBitmap(
+                        source,
+                        size,
+                        size,
+                        true
+                );
+
+        Bitmap outputBitmap =
+                Bitmap.createBitmap(
+                        size,
+                        size,
+                        Bitmap.Config.ARGB_8888
+                );
+
+        Canvas canvas =
+                new Canvas(
+                        outputBitmap
+                );
+
+        Paint paint =
+                new Paint(
+                        Paint.ANTI_ALIAS_FLAG
+                );
+
+        RectF rect =
+                new RectF(
+                        0,
+                        0,
+                        size,
+                        size
+                );
+
+        canvas.drawOval(
+                rect,
+                paint
+        );
+
+        paint.setXfermode(
+                new android.graphics.PorterDuffXfermode(
+                        android.graphics.PorterDuff.Mode.SRC_IN
+                )
+        );
+
+        canvas.drawBitmap(
+                scaledBitmap,
+                0,
+                0,
+                paint
+        );
+
+        paint.setXfermode(
+                null
+        );
+
+        Paint borderPaint =
+                new Paint(
+                        Paint.ANTI_ALIAS_FLAG
+                );
+
+        borderPaint.setStyle(
+                Paint.Style.STROKE
+        );
+
+        borderPaint.setStrokeWidth(
+                8
+        );
+
+        borderPaint.setColor(
+                Color.WHITE
+        );
+
+        canvas.drawOval(
+                new RectF(
+                        4,
+                        4,
+                        size - 4,
+                        size - 4
+                ),
+                borderPaint
+        );
+
+        return outputBitmap;
+    }
+
+    private KeywordMapVO convertRecommendedPlaceToKeywordMapVO(
+            RecommendedPlace place
+    ) {
+
+        KeywordMapVO vo =
+                new KeywordMapVO();
+
+        if (place == null) {
+            return vo;
+        }
+
+        String id =
+                place.getPlaceId() == null
+                        ? ""
+                        : String.valueOf(
+                        place.getPlaceId()
+                );
+
+        String placeName =
+                place.getPlaceName() == null
+                        ? ""
+                        : place.getPlaceName();
+
+        String latitude =
+                place.getLatitude() == null
+                        ? ""
+                        : String.valueOf(
+                        place.getLatitude()
+                );
+
+        String longitude =
+                place.getLongitude() == null
+                        ? ""
+                        : String.valueOf(
+                        place.getLongitude()
+                );
+
+        setKeywordValue(
+                vo,
+                "id",
+                "setId",
+                id
+        );
+
+        setKeywordValue(
+                vo,
+                "place_name",
+                "setPlace_name",
+                placeName
+        );
+
+        setKeywordValue(
+                vo,
+                "placeName",
+                "setPlaceName",
+                placeName
+        );
+
+        setKeywordValue(
+                vo,
+                "x",
+                "setX",
+                longitude
+        );
+
+        setKeywordValue(
+                vo,
+                "y",
+                "setY",
+                latitude
+        );
+
+        setKeywordValue(
+                vo,
+                "longitude",
+                "setLongitude",
+                longitude
+        );
+
+        setKeywordValue(
+                vo,
+                "latitude",
+                "setLatitude",
+                latitude
+        );
+
+        return vo;
+    }
+
+    private void setKeywordValue(
+            KeywordMapVO vo,
+            String fieldName,
+            String setterName,
+            String value
+    ) {
+
+        if (vo == null) {
+            return;
+        }
+
+        try {
+
+            Method method =
+                    vo.getClass()
+                            .getMethod(
+                                    setterName,
+                                    String.class
+                            );
+
+            method.invoke(
+                    vo,
+                    value
+            );
+
+            return;
+
+        } catch (Exception ignore) {
+        }
+
+        try {
+
+            Field field =
+                    vo.getClass()
+                            .getDeclaredField(
+                                    fieldName
+                            );
+
+            field.setAccessible(
+                    true
+            );
+
+            field.set(
+                    vo,
+                    value
+            );
+
+        } catch (Exception ignore) {
+        }
+    }
+
     private LabelStyles getDefaultLabelStyle() {
 
-        // 마커 이미지 할당 및 텍스트 크기 및 글자 색 적용 이미지 크기 나중에 조정필요
-        return kakaoMap.getLabelManager()
+        return kakaoMap
+                .getLabelManager()
                 .addLabelStyles(
                         LabelStyles.from(
                                 LabelStyle.from(
@@ -244,10 +1003,10 @@ public class KakaoMapHandler {
                 );
     }
 
-    // 클러스터 마커 스타일 (큰 빨간 글자로 일반 마커와 구분)
     private LabelStyles getClusterLabelStyle() {
 
-        return kakaoMap.getLabelManager()
+        return kakaoMap
+                .getLabelManager()
                 .addLabelStyles(
                         LabelStyles.from(
                                 LabelStyle.from(

@@ -22,6 +22,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import com.tech.motjip.API.ApiService;
 import com.tech.motjip.API.RetrofitClient;
+import com.tech.motjip.Auth.TokenManager;
 import com.tech.motjip.Controller.MainController;
 import com.tech.motjip.Dto.RequestDto.FcmTokenRequestDto;
 import com.tech.motjip.Dto.RequestDto.UpdateLocationRequestDto;
@@ -343,6 +344,91 @@ public class MainActivity extends BaseActivity
                         + user
         );
 
+        if (user == null) {
+
+            Log.e(
+                    TAG,
+                    "moveNextByUser 중단 - user null"
+            );
+
+            LoginStateManager.setLoginStatus(
+                    this,
+                    LoginStateManager.LOGOUT
+            );
+
+            initializeLoginScreen();
+
+            DialogUtil.showMessageDialog(
+                    this,
+                    R.drawable.fail,
+                    "로그인 실패",
+                    "사용자 정보를 받지 못했습니다.",
+                    null
+            );
+
+            return;
+        }
+
+        boolean hasNewAccessToken =
+                user.getAccessToken() != null
+                        && !user.getAccessToken()
+                        .trim()
+                        .isEmpty();
+
+        boolean hasNewRefreshToken =
+                user.getRefreshToken() != null
+                        && !user.getRefreshToken()
+                        .trim()
+                        .isEmpty();
+
+        Log.d(
+                TAG,
+                "accessToken exists = "
+                        + hasNewAccessToken
+        );
+
+        Log.d(
+                TAG,
+                "refreshToken exists = "
+                        + hasNewRefreshToken
+        );
+
+        /*
+         * 로그인 성공 직후 토큰 저장
+         *
+         * 최초 소셜 로그인 응답에는 accessToken / refreshToken이 포함될 수 있다.
+         *
+         * 반면 앱 재실행 후 자동 로그인 응답은 이미 저장된 토큰으로
+         * 사용자 정보만 확인하는 흐름일 수 있으므로,
+         * 응답에 새 토큰이 없다고 해서 로그아웃 처리하거나
+         * 에러로 판단하면 안 된다.
+         */
+        if (hasNewAccessToken
+                && hasNewRefreshToken) {
+
+            TokenManager tokenManager =
+                    new TokenManager(
+                            this
+                    );
+
+            tokenManager.saveTokens(
+                    user.getAccessToken(),
+                    user.getRefreshToken()
+            );
+
+            Log.d(
+                    TAG,
+                    "로그인 성공 후 새 토큰 저장 완료"
+            );
+
+        } else {
+
+            Log.d(
+                    TAG,
+                    "새 토큰 재발급 없음 - 기존 저장 토큰 유지"
+            );
+        }
+
         LoginStateManager.setLoginStatus(
                 this,
                 LoginStateManager.LOGIN
@@ -386,6 +472,11 @@ public class MainActivity extends BaseActivity
             intent.putExtra(
                     "member_id",
                     user.getMemberId()
+            );
+
+            intent.putExtra(
+                    "nickname",
+                    user.getNickname()
             );
 
             startActivity(

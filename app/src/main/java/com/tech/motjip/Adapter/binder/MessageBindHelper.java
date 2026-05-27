@@ -20,7 +20,7 @@ public class MessageBindHelper {
             "__UNREAD_DIVIDER__";
 
     private static final String BASE_IMAGE_URL =
-            "https://spiny-impure-laptop.ngrok-free.dev";
+            "https://spout-distant-cost.ngrok-free.dev";
 
     private MessageBindHelper() {
     }
