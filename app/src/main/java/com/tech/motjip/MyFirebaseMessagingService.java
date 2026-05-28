@@ -162,12 +162,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         + roomType
         );
 
-        if ("CHAT_MESSAGE".equals(type)) {
-
-            sendChatRoomListUpdateBroadcast(
-                    roomId
-            );
-        }
+        // 중요:
+        // 채팅방 리스트 실시간 갱신은 ChatFragment의 WebSocket이 담당한다.
+        // 여기서 브로드캐스트로 loadChatRooms()를 다시 호출하면
+        // WebSocket 갱신과 FCM 갱신이 겹쳐 unreadCount가
+        // 20 -> 22 -> 21 처럼 흔들릴 수 있다.
+        //
+        // 따라서 CHAT_MESSAGE 수신 시 채팅방 리스트 갱신 브로드캐스트는 보내지 않는다.
+        // FCM은 알림 표시만 담당한다.
 
         if ("CHAT_MESSAGE".equals(type)
                 && isCurrentlyViewingRoom(roomId)) {
