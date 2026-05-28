@@ -1,9 +1,11 @@
 package com.tech.motjip.Adapter;
 
+import android.view.Gravity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.ImageView;
 
@@ -314,27 +316,31 @@ public class ChatRoomAdapter
         );
     }
 
-
     private void bindProfiles(
             @NonNull ViewHolder holder,
             @NonNull ChatRoom room
     ) {
 
-        holder.ivProfile1.setVisibility(
-                View.INVISIBLE
-        );
+        ImageView[] imageViews = {
+                holder.ivProfile1,
+                holder.ivProfile2,
+                holder.ivProfile3,
+                holder.ivProfile4
+        };
 
-        holder.ivProfile2.setVisibility(
-                View.INVISIBLE
-        );
+        for (ImageView imageView : imageViews) {
 
-        holder.ivProfile3.setVisibility(
-                View.INVISIBLE
-        );
+            Glide.with(imageView.getContext())
+                    .clear(imageView);
 
-        holder.ivProfile4.setVisibility(
-                View.INVISIBLE
-        );
+            imageView.setVisibility(
+                    View.GONE
+            );
+
+            imageView.setImageResource(
+                    R.drawable.default_profile
+            );
+        }
 
         List<String> profiles =
                 room.getParticipantProfileImages();
@@ -346,8 +352,16 @@ public class ChatRoomAdapter
                     View.VISIBLE
             );
 
-            Glide.with(holder.itemView.getContext())
+            applyProfileLayout(
+                    holder.ivProfile1,
+                    1,
+                    0
+            );
+
+            Glide.with(holder.ivProfile1.getContext())
                     .load(R.drawable.default_profile)
+                    .placeholder(R.drawable.default_profile)
+                    .error(R.drawable.default_profile)
                     .circleCrop()
                     .into(holder.ivProfile1);
 
@@ -360,87 +374,123 @@ public class ChatRoomAdapter
                         4
                 );
 
-        ImageView[] imageViews = {
-                holder.ivProfile1,
-                holder.ivProfile2,
-                holder.ivProfile3,
-                holder.ivProfile4
-        };
+        for (int i = 0; i < size; i++) {
 
-        if (size >= 1) {
+            ImageView imageView =
+                    imageViews[i];
 
-            holder.ivProfile1.setVisibility(
+            imageView.setVisibility(
                     View.VISIBLE
+            );
+
+            applyProfileLayout(
+                    imageView,
+                    size,
+                    i
             );
 
             loadProfile(
-                    holder.ivProfile1,
-                    profiles.get(0)
+                    imageView,
+                    profiles.get(i)
             );
         }
+    }
 
-        if (size >= 2) {
+    private void applyProfileLayout(
+            ImageView imageView,
+            int count,
+            int index
+    ) {
 
-            holder.ivProfile2.setVisibility(
-                    View.VISIBLE
-            );
+        int imageSize =
+                count == 1
+                        ? 52
+                        : 24;
 
-            loadProfile(
-                    holder.ivProfile2,
-                    profiles.get(1)
-            );
+        FrameLayout.LayoutParams params =
+                new FrameLayout.LayoutParams(
+                        dpToPx(
+                                imageView,
+                                imageSize
+                        ),
+                        dpToPx(
+                                imageView,
+                                imageSize
+                        )
+                );
+
+        if (count == 1) {
+
+            params.gravity =
+                    Gravity.CENTER;
+
+        } else if (count == 2) {
+
+            if (index == 0) {
+
+                params.gravity =
+                        Gravity.START
+                                | Gravity.CENTER_VERTICAL;
+
+            } else {
+
+                params.gravity =
+                        Gravity.END
+                                | Gravity.CENTER_VERTICAL;
+            }
+
+        } else if (count == 3) {
+
+            if (index == 0) {
+
+                params.gravity =
+                        Gravity.TOP
+                                | Gravity.CENTER_HORIZONTAL;
+
+            } else if (index == 1) {
+
+                params.gravity =
+                        Gravity.BOTTOM
+                                | Gravity.START;
+
+            } else {
+
+                params.gravity =
+                        Gravity.BOTTOM
+                                | Gravity.END;
+            }
+
+        } else {
+
+            if (index == 0) {
+
+                params.gravity =
+                        Gravity.TOP
+                                | Gravity.START;
+
+            } else if (index == 1) {
+
+                params.gravity =
+                        Gravity.TOP
+                                | Gravity.END;
+
+            } else if (index == 2) {
+
+                params.gravity =
+                        Gravity.BOTTOM
+                                | Gravity.START;
+
+            } else {
+
+                params.gravity =
+                        Gravity.BOTTOM
+                                | Gravity.END;
+            }
         }
 
-        if (size >= 3) {
-
-            holder.ivProfile3.setVisibility(
-                    View.VISIBLE
-            );
-
-            loadProfile(
-                    holder.ivProfile3,
-                    profiles.get(2)
-            );
-        }
-
-        if (size >= 4) {
-
-            holder.ivProfile4.setVisibility(
-                    View.VISIBLE
-            );
-
-            loadProfile(
-                    holder.ivProfile4,
-                    profiles.get(3)
-            );
-        }
-
-        if (size == 1) {
-
-            holder.ivProfile1.setVisibility(
-                    View.VISIBLE
-            );
-        }
-
-        if (size == 2) {
-
-            holder.ivProfile3.setVisibility(
-                    View.GONE
-            );
-
-            holder.ivProfile4.setVisibility(
-                    View.GONE
-            );
-
-        } else if (size == 3) {
-
-            holder.ivProfile4.setVisibility(
-                    View.GONE
-            );
-        }
-
-
-
+        imageView.setLayoutParams(
+                params
+        );
     }
 
     private void loadProfile(
@@ -448,20 +498,62 @@ public class ChatRoomAdapter
             String profileUrl
     ) {
 
-        if (profileUrl != null
-                && !profileUrl.startsWith("http")) {
-
-            profileUrl =
-                    RetrofitClient.BASE_URL
-                            + profileUrl;
-        }
+        String fullProfileUrl =
+                buildImageUrl(
+                        profileUrl
+                );
 
         Glide.with(imageView.getContext())
-                .load(profileUrl)
+                .load(fullProfileUrl)
                 .placeholder(R.drawable.default_profile)
                 .error(R.drawable.default_profile)
+                .fallback(R.drawable.default_profile)
                 .circleCrop()
                 .into(imageView);
+    }
+
+    private String buildImageUrl(
+            String imageUrl
+    ) {
+
+        if (imageUrl == null
+                || imageUrl.trim().isEmpty()) {
+
+            return null;
+        }
+
+        String trimmedUrl =
+                imageUrl.trim();
+
+        if (trimmedUrl.startsWith("http://")
+                || trimmedUrl.startsWith("https://")) {
+
+            return trimmedUrl;
+        }
+
+        return RetrofitClient.BASE_URL.replaceAll(
+                "/$",
+                ""
+        )
+                + "/"
+                + trimmedUrl.replaceAll(
+                "^/",
+                ""
+        );
+    }
+
+    private int dpToPx(
+            View view,
+            int dp
+    ) {
+
+        return (int) (
+                dp
+                        * view.getResources()
+                        .getDisplayMetrics()
+                        .density
+                        + 0.5f
+        );
     }
 
     private void bindClickListener(
@@ -739,10 +831,6 @@ public class ChatRoomAdapter
         return displayName;
     }
 
-
-
-
-
     @Override
     public int getItemCount() {
 
@@ -795,7 +883,6 @@ public class ChatRoomAdapter
                             R.id.tv_unread_count
                     );
 
-
             ivProfile1 =
                     itemView.findViewById(
                             R.id.iv_profile_1
@@ -815,7 +902,6 @@ public class ChatRoomAdapter
                     itemView.findViewById(
                             R.id.iv_profile_4
                     );
-
         }
     }
 }
