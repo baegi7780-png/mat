@@ -26,7 +26,7 @@ public class PlaceReviewAdapter
             new ArrayList<>();
 
     private static final String BASE_URL =
-            "https://spout-distant-cost.ngrok-free.dev";
+            "https://spiny-impure-laptop.ngrok-free.dev";;
 
     public interface OnReviewActionListener {
 

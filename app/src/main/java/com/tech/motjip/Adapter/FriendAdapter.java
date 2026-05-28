@@ -195,7 +195,7 @@ public class FriendAdapter
                 && !profileImgUrl.isEmpty()) {
 
             String imageUrl =
-                    "https://spout-distant-cost.ngrok-free.dev"
+                    "https://spiny-impure-laptop.ngrok-free.dev"
                             + profileImgUrl;
 
             Glide.with(context)

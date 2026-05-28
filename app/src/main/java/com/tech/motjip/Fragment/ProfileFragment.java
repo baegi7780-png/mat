@@ -74,7 +74,7 @@ public class ProfileFragment extends Fragment {
             "CACHED_PROFILE_IMG_URL";
 
     private static final String BASE_IMAGE_URL =
-            "https://spout-distant-cost.ngrok-free.dev";
+            "https://spiny-impure-laptop.ngrok-free.dev";
 
     public ProfileFragment() {
     }

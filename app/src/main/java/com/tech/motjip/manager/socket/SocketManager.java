@@ -33,7 +33,7 @@ public class SocketManager {
             "SocketManager";
 
     private static final String SOCKET_URL =
-            "wss://spout-distant-cost.ngrok-free.dev/ws/chat/websocket";
+            "wss://spiny-impure-laptop.ngrok-free.dev/ws/chat/websocket";
 
     private static SocketManager instance;
 

@@ -300,8 +300,8 @@ public class MainActivity extends BaseActivity
 
             String url =
                     "https://accounts.google.com/o/oauth2/v2/auth?"
-                            + "client_id=733059527774-sb6lg9a1nfiuicv713h62gr9kvjmfpul.apps.googleusercontent.com"
-                            + "&redirect_uri=https://spout-distant-cost.ngrok-free.dev/login/oauth2/code/google"
+                            + "client_id=578669991449-hd5p76amsc8mcfmp00lbbpnahlj9edcg.apps.googleusercontent.com"
+                            + "&redirect_uri=https://spiny-impure-laptop.ngrok-free.dev/login/oauth2/code/google"
                             + "&response_type=code"
                             + "&scope=openid%20email%20profile";
 

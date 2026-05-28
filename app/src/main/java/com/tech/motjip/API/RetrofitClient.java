@@ -27,7 +27,7 @@ public class RetrofitClient {
             "RetrofitClientDebug";
 
     public static final String BASE_URL =
-            "https://spout-distant-cost.ngrok-free.dev/";
+            "https://spiny-impure-laptop.ngrok-free.dev";
 
     private static final String PREF_NAME =
             "AppPrefs";
