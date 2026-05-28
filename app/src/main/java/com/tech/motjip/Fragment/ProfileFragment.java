@@ -1,7 +1,11 @@
 package com.tech.motjip.Fragment;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,12 +26,14 @@ import com.tech.motjip.Dto.RequestDto.LogoutRequestDto;
 import com.tech.motjip.Dto.ResponseDto.LoginResponseDto;
 import com.tech.motjip.FavoriteActivity;
 import com.tech.motjip.FriendActivity;
+import com.tech.motjip.Handler.PreferenceManager;
 import com.tech.motjip.MainActivity;
 import com.tech.motjip.MyCommunityManageActivity;
+import com.tech.motjip.MyFirebaseMessagingService;
 import com.tech.motjip.MyInfoActivity;
 import com.tech.motjip.NotificationActivity;
-import com.tech.motjip.Handler.PreferenceManager;
 import com.tech.motjip.R;
+import com.tech.motjip.manager.NotificationBadgeManager;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,6 +43,8 @@ public class ProfileFragment extends Fragment {
 
     private TextView tvEmail;
     private TextView tvNickname;
+
+    private TextView tvNotificationBadge;
 
     private ImageView ivProfileImage;
 
@@ -50,8 +58,12 @@ public class ProfileFragment extends Fragment {
     private ImageButton btnSettings;
 
     private Call<LoginResponseDto> currentUserCall;
+    private Call<Long> unreadNotificationCountCall;
 
     private boolean isLoadingMyInfo = false;
+    private boolean isLoadingUnreadCount = false;
+
+    private boolean isBadgeReceiverRegistered = false;
 
     private static final String PREF_NAME = "AppPrefs";
 
@@ -75,6 +87,25 @@ public class ProfileFragment extends Fragment {
 
     private static final String BASE_IMAGE_URL =
             "https://spiny-impure-laptop.ngrok-free.dev";
+
+    private final BroadcastReceiver notificationBadgeReceiver =
+            new BroadcastReceiver() {
+
+                @Override
+                public void onReceive(
+                        Context context,
+                        Intent intent
+                ) {
+
+                    if (!isAdded()
+                            || getContext() == null) {
+
+                        return;
+                    }
+
+                    loadUnreadNotificationCount();
+                }
+            };
 
     public ProfileFragment() {
     }
@@ -108,6 +139,9 @@ public class ProfileFragment extends Fragment {
         tvNickname =
                 view.findViewById(R.id.tvNickname);
 
+        tvNotificationBadge =
+                view.findViewById(R.id.tvNotificationBadge);
+
         ivProfileImage =
                 view.findViewById(R.id.ivProfileImage);
 
@@ -130,6 +164,8 @@ public class ProfileFragment extends Fragment {
                 view.findViewById(R.id.btnSettings);
 
         loadCachedMyInfo();
+
+        registerNotificationBadgeReceiver();
 
         btnLogout.setOnClickListener(v -> logout());
 
@@ -195,12 +231,16 @@ public class ProfileFragment extends Fragment {
         super.onResume();
 
         loadMyInfo();
+
+        loadUnreadNotificationCount();
     }
 
     @Override
     public void onDestroyView() {
 
         super.onDestroyView();
+
+        unregisterNotificationBadgeReceiver();
 
         if (currentUserCall != null) {
 
@@ -210,8 +250,184 @@ public class ProfileFragment extends Fragment {
                     null;
         }
 
+        if (unreadNotificationCountCall != null) {
+
+            unreadNotificationCountCall.cancel();
+
+            unreadNotificationCountCall =
+                    null;
+        }
+
         isLoadingMyInfo =
                 false;
+
+        isLoadingUnreadCount =
+                false;
+    }
+
+    private void registerNotificationBadgeReceiver() {
+
+        if (!isAdded()
+                || getContext() == null
+                || isBadgeReceiverRegistered) {
+
+            return;
+        }
+
+        IntentFilter filter =
+                new IntentFilter(
+                        MyFirebaseMessagingService.ACTION_NOTIFICATION_BADGE_UPDATE
+                );
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            requireContext().registerReceiver(
+                    notificationBadgeReceiver,
+                    filter,
+                    Context.RECEIVER_NOT_EXPORTED
+            );
+
+        } else {
+
+            requireContext().registerReceiver(
+                    notificationBadgeReceiver,
+                    filter
+            );
+        }
+
+        isBadgeReceiverRegistered =
+                true;
+    }
+
+    private void unregisterNotificationBadgeReceiver() {
+
+        if (!isAdded()
+                || getContext() == null
+                || !isBadgeReceiverRegistered) {
+
+            return;
+        }
+
+        try {
+
+            requireContext().unregisterReceiver(
+                    notificationBadgeReceiver
+            );
+
+        } catch (Exception ignored) {
+        }
+
+        isBadgeReceiverRegistered =
+                false;
+    }
+
+    private void loadUnreadNotificationCount() {
+
+        if (!isAdded()
+                || getContext() == null
+                || isLoadingUnreadCount) {
+
+            return;
+        }
+
+        isLoadingUnreadCount =
+                true;
+
+        if (unreadNotificationCountCall != null) {
+
+            unreadNotificationCountCall.cancel();
+        }
+
+        unreadNotificationCountCall =
+                RetrofitClient.getApiService(
+                                requireContext()
+                        )
+                        .getUnreadNotificationCount();
+
+        unreadNotificationCountCall.enqueue(new Callback<Long>() {
+
+            @Override
+            public void onResponse(
+                    Call<Long> call,
+                    Response<Long> response
+            ) {
+
+                isLoadingUnreadCount =
+                        false;
+
+                if (!isAdded()
+                        || getContext() == null
+                        || getView() == null) {
+
+                    return;
+                }
+
+                if (response.isSuccessful()
+                        && response.body() != null) {
+
+                    updateNotificationBadge(
+                            response.body().intValue()
+                    );
+
+                } else {
+
+                    updateNotificationBadge(0);
+                }
+            }
+
+            @Override
+            public void onFailure(
+                    Call<Long> call,
+                    Throwable t
+            ) {
+
+                isLoadingUnreadCount =
+                        false;
+
+                if (call.isCanceled()) {
+
+                    return;
+                }
+
+                if (!isAdded()
+                        || getContext() == null
+                        || getView() == null) {
+
+                    return;
+                }
+
+                updateNotificationBadge(0);
+            }
+        });
+    }
+
+    private void updateNotificationBadge(
+            int unreadCount
+    ) {
+
+        if (tvNotificationBadge == null) {
+
+            return;
+        }
+
+        if (!NotificationBadgeManager.shouldShowBadge(unreadCount)) {
+
+            tvNotificationBadge.setVisibility(
+                    View.GONE
+            );
+
+            return;
+        }
+
+        tvNotificationBadge.setVisibility(
+                View.VISIBLE
+        );
+
+        tvNotificationBadge.setText(
+                NotificationBadgeManager.formatBadgeCount(
+                        unreadCount
+                )
+        );
     }
 
     private void loadCachedMyInfo() {

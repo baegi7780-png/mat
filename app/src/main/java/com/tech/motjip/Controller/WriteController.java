@@ -45,6 +45,7 @@ public class WriteController {
             String title,
             String location,
             String date,
+            String chatLink,
             String content,
             Uri imageUri,
             Callback<Void> callback
@@ -64,6 +65,13 @@ public class WriteController {
 
         RequestBody dateBody =
                 createTextRequestBody(date);
+
+        RequestBody chatLinkBody =
+                createTextRequestBody(
+                        chatLink != null
+                                ? chatLink
+                                : ""
+                );
 
         RequestBody contentBody =
                 createTextRequestBody(content);
@@ -82,6 +90,7 @@ public class WriteController {
                 titleBody,
                 locationBody,
                 dateBody,
+                chatLinkBody,
                 contentBody,
                 imagePart
         ).enqueue(callback);
@@ -94,6 +103,7 @@ public class WriteController {
             String title,
             String location,
             String date,
+            String chatLink,
             String content,
             Uri imageUri,
             Callback<Void> callback
@@ -113,6 +123,13 @@ public class WriteController {
 
         RequestBody dateBody =
                 createTextRequestBody(date);
+
+        RequestBody chatLinkBody =
+                createTextRequestBody(
+                        chatLink != null
+                                ? chatLink
+                                : ""
+                );
 
         RequestBody contentBody =
                 createTextRequestBody(content);
@@ -132,6 +149,7 @@ public class WriteController {
                 titleBody,
                 locationBody,
                 dateBody,
+                chatLinkBody,
                 contentBody,
                 imagePart
         ).enqueue(callback);
@@ -505,6 +523,7 @@ public class WriteController {
             String title,
             String location,
             String date,
+            String chatLink,
             String content,
             Uri selectedImageUri
     ) {
@@ -512,6 +531,7 @@ public class WriteController {
         return title != null && !title.trim().isEmpty()
                 || location != null && !location.trim().isEmpty()
                 || date != null && !date.trim().isEmpty()
+                || chatLink != null && !chatLink.trim().isEmpty()
                 || content != null && !content.trim().isEmpty()
                 || selectedImageUri != null;
     }

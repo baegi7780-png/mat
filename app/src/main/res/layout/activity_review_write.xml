@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="#FFF7EA"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingStart="24dp"
+        android:paddingTop="28dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="32dp">
 
         <TextView
             android:id="@+id/tvPlaceName"
@@ -18,7 +22,7 @@
             android:gravity="center"
             android:text="장소명"
             android:textColor="#111111"
-            android:textSize="24sp"
+            android:textSize="26sp"
             android:textStyle="bold" />
 
         <RatingBar
@@ -27,9 +31,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="26dp"
             android:numStars="5"
+            android:progressBackgroundTint="#DDDDDD"
+            android:progressTint="#FFC107"
             android:rating="0"
+            android:secondaryProgressTint="#FFC107"
             android:stepSize="1" />
 
         <CheckBox
@@ -37,15 +44,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="18dp"
+            android:buttonTint="#F19E39"
             android:text="재방문 하고 싶어요"
-            android:textSize="18sp" />
+            android:textColor="#222222"
+            android:textSize="17sp" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="28dp"
-            android:background="#EEEEEE" />
+            android:background="#E8D9C5" />
 
         <TextView
             android:layout_width="match_parent"
@@ -54,7 +63,7 @@
             android:gravity="center"
             android:text="어떤 점이 좋으셨나요?"
             android:textColor="#111111"
-            android:textSize="22sp"
+            android:textSize="23sp"
             android:textStyle="bold" />
 
         <TextView
@@ -80,72 +89,82 @@
                 <Button
                     android:id="@+id/btnTaste"
                     android:layout_width="0dp"
-                    android:layout_height="90dp"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:background="@drawable/review_tag_unselected"
+                    android:backgroundTint="@null"
                     android:text="맛"
                     android:textColor="#111111"
-                    android:textSize="15sp" />
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <Space
-                    android:layout_width="12dp"
+                    android:layout_width="10dp"
                     android:layout_height="1dp" />
 
                 <Button
                     android:id="@+id/btnCost"
                     android:layout_width="0dp"
-                    android:layout_height="90dp"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:background="@drawable/review_tag_unselected"
+                    android:backgroundTint="@null"
                     android:text="가성비"
                     android:textColor="#111111"
-                    android:textSize="15sp" />
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <Space
-                    android:layout_width="12dp"
+                    android:layout_width="10dp"
                     android:layout_height="1dp" />
 
                 <Button
                     android:id="@+id/btnKind"
                     android:layout_width="0dp"
-                    android:layout_height="90dp"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:background="@drawable/review_tag_unselected"
+                    android:backgroundTint="@null"
                     android:text="친절"
                     android:textColor="#111111"
-                    android:textSize="15sp" />
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/btnMood"
                     android:layout_width="0dp"
-                    android:layout_height="90dp"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:background="@drawable/review_tag_unselected"
+                    android:backgroundTint="@null"
                     android:text="분위기"
                     android:textColor="#111111"
-                    android:textSize="15sp" />
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <Space
-                    android:layout_width="12dp"
+                    android:layout_width="10dp"
                     android:layout_height="1dp" />
 
                 <Button
                     android:id="@+id/btnParking"
                     android:layout_width="0dp"
-                    android:layout_height="90dp"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:background="@drawable/review_tag_unselected"
+                    android:backgroundTint="@null"
                     android:text="주차"
                     android:textColor="#111111"
-                    android:textSize="15sp" />
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <Space
                     android:layout_width="0dp"
@@ -160,7 +179,7 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="32dp"
-            android:background="#EEEEEE" />
+            android:background="#E8D9C5" />
 
         <TextView
             android:layout_width="match_parent"
@@ -169,17 +188,20 @@
             android:gravity="center"
             android:text="후기를 작성해 보세요!"
             android:textColor="#111111"
-            android:textSize="22sp"
+            android:textSize="23sp"
             android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnAddPhoto"
-            android:layout_width="130dp"
-            android:layout_height="110dp"
+            android:layout_width="120dp"
+            android:layout_height="52dp"
             android:layout_gravity="center"
             android:layout_marginTop="22dp"
-            android:text="사진/영상"
-            android:textSize="15sp" />
+            android:backgroundTint="#F19E39"
+            android:text="사진 추가"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/ivPreviewImage"
@@ -193,23 +215,28 @@
         <EditText
             android:id="@+id/etReviewContent"
             android:layout_width="match_parent"
-            android:layout_height="220dp"
-            android:layout_marginTop="24dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="22dp"
             android:background="@android:drawable/edit_text"
             android:gravity="top"
             android:hint="해당 장소에 대한 팁과 경험을 나눠주세요."
             android:inputType="textMultiLine"
             android:maxLength="2000"
             android:padding="16dp"
-            android:textSize="16sp" />
+            android:textColor="#111111"
+            android:textColorHint="#999999"
+            android:textSize="15sp" />
 
         <Button
             android:id="@+id/btnSubmitReview"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="24dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="22dp"
+            android:backgroundTint="#F19E39"
             android:text="후기 등록"
-            android:textSize="17sp" />
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 </ScrollView>

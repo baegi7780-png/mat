@@ -7,9 +7,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -45,6 +45,7 @@ public class WriteActivity extends AppCompatActivity {
     private EditText etTitle;
     private EditText etLocation;
     private EditText etDate;
+    private EditText etChatLink;
     private EditText etContent;
 
     private TextView tvTitleCount;
@@ -75,6 +76,7 @@ public class WriteActivity extends AppCompatActivity {
     private String uploadButtonDefaultText = "등록하기";
 
     private String[] tags = {
+            "태그 선택",
             "한식",
             "중식",
             "양식",
@@ -84,6 +86,7 @@ public class WriteActivity extends AppCompatActivity {
     };
 
     private String[] regions = {
+            "지역 선택",
             "서울",
             "부산",
             "대구",
@@ -163,6 +166,7 @@ public class WriteActivity extends AppCompatActivity {
         etTitle = findViewById(R.id.etTitle);
         etLocation = findViewById(R.id.etLocation);
         etDate = findViewById(R.id.etDate);
+        etChatLink = findViewById(R.id.etChatLink);
         etContent = findViewById(R.id.etContent);
 
         tvTitleCount = findViewById(R.id.tvTitleCount);
@@ -183,12 +187,13 @@ public class WriteActivity extends AppCompatActivity {
 
         etTitle.setSingleLine(true);
         etLocation.setSingleLine(true);
+        etChatLink.setSingleLine(true);
 
         etTitle.setImeOptions(EditorInfo.IME_ACTION_NEXT);
         etLocation.setImeOptions(EditorInfo.IME_ACTION_NEXT);
+        etChatLink.setImeOptions(EditorInfo.IME_ACTION_NEXT);
         etContent.setImeOptions(EditorInfo.IME_ACTION_DONE);
 
-        // 지도 상세페이지에서 전달된 장소 데이터 받기
         String placeName =
                 getIntent().getStringExtra(
                         "placeName"
@@ -199,8 +204,6 @@ public class WriteActivity extends AppCompatActivity {
                         "placeAddress"
                 );
 
-        // 전달받은 장소명 자동 입력
-        // 단순 기본값이므로 사용자가 삭제하거나 수정할 수 있음
         if (placeName != null
                 && !placeName.isEmpty()) {
 
@@ -213,8 +216,6 @@ public class WriteActivity extends AppCompatActivity {
             );
         }
 
-        // 전달받은 주소 자동 입력
-        // 단순 기본값이므로 사용자가 삭제하거나 수정할 수 있음
         if (placeAddress != null
                 && !placeAddress.isEmpty()) {
 
@@ -264,6 +265,18 @@ public class WriteActivity extends AppCompatActivity {
                 etDate.requestFocus();
 
                 etDate.performClick();
+
+                return true;
+            }
+
+            return false;
+        });
+
+        etChatLink.setOnEditorActionListener((v, actionId, event) -> {
+
+            if (actionId == EditorInfo.IME_ACTION_NEXT) {
+
+                etContent.requestFocus();
 
                 return true;
             }
@@ -390,7 +403,7 @@ public class WriteActivity extends AppCompatActivity {
 
                                                     etDate.clearFocus();
 
-                                                    etContent.requestFocus();
+                                                    etChatLink.requestFocus();
 
                                                 },
                                                 now.get(Calendar.HOUR_OF_DAY),
@@ -448,6 +461,32 @@ public class WriteActivity extends AppCompatActivity {
             String region =
                     spinnerRegion.getSelectedItem().toString();
 
+            if (tag.equals("태그 선택")) {
+
+                DialogUtil.showMessageDialog(
+                        this,
+                        R.drawable.fail,
+                        "입력 오류",
+                        "태그를 선택해 주세요.",
+                        null
+                );
+
+                return;
+            }
+
+            if (region.equals("지역 선택")) {
+
+                DialogUtil.showMessageDialog(
+                        this,
+                        R.drawable.fail,
+                        "입력 오류",
+                        "지역을 선택해 주세요.",
+                        null
+                );
+
+                return;
+            }
+
             String title =
                     etTitle.getText().toString().trim();
 
@@ -458,6 +497,9 @@ public class WriteActivity extends AppCompatActivity {
                     writeController.convertDateForServer(
                             etDate.getText().toString().trim()
                     );
+
+            String chatLink =
+                    etChatLink.getText().toString().trim();
 
             String content =
                     etContent.getText().toString().trim();
@@ -494,6 +536,7 @@ public class WriteActivity extends AppCompatActivity {
                         title,
                         location,
                         date,
+                        chatLink,
                         content,
                         selectedImageUri,
                         new Callback<Void>() {
@@ -567,6 +610,7 @@ public class WriteActivity extends AppCompatActivity {
                         title,
                         location,
                         date,
+                        chatLink,
                         content,
                         selectedImageUri,
                         new Callback<Void>() {
@@ -657,7 +701,7 @@ public class WriteActivity extends AppCompatActivity {
             ) {
 
                 tvTitleCount.setText(
-                        s.length() + " / 25"
+                        s.length() + " / 20"
                 );
 
                 updateTitleCountColor(
@@ -706,13 +750,13 @@ public class WriteActivity extends AppCompatActivity {
 
     private void updateTitleCountColor(int length) {
 
-        if (length >= 25) {
+        if (length >= 20) {
 
             tvTitleCount.setTextColor(
                     Color.parseColor("#D32F2F")
             );
 
-        } else if (length >= 20) {
+        } else if (length >= 16) {
 
             tvTitleCount.setTextColor(
                     Color.parseColor("#F57C00")
@@ -794,6 +838,13 @@ public class WriteActivity extends AppCompatActivity {
 
         etDate.setText(editPost.getMeetingAt());
 
+        if (editPost.getChatLink() != null) {
+
+            etChatLink.setText(
+                    editPost.getChatLink()
+            );
+        }
+
         etContent.setText(editPost.getContent());
 
         btnUpload.setText("수정 완료");
@@ -841,6 +892,7 @@ public class WriteActivity extends AppCompatActivity {
                 etTitle.getText().toString(),
                 etLocation.getText().toString(),
                 etDate.getText().toString(),
+                etChatLink.getText().toString(),
                 etContent.getText().toString(),
                 selectedImageUri
         );

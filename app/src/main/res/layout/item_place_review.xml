@@ -53,7 +53,10 @@
                     android:layout_height="wrap_content"
                     android:isIndicator="true"
                     android:numStars="5"
-                    android:stepSize="0.5" />
+                    android:stepSize="0.5"
+                    android:progressTint="#FFC107"
+                    android:secondaryProgressTint="#FFC107"
+                    android:progressBackgroundTint="#DDDDDD" />
 
                 <TextView
                     android:id="@+id/tvCreatedAt"
@@ -82,16 +85,6 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/tvContent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="후기 내용"
-        android:textColor="#111111"
-        android:textSize="15sp"
-        android:lineSpacingExtra="3dp" />
-
-    <TextView
         android:id="@+id/tvTags"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -100,6 +93,16 @@
         android:textColor="#F19E39"
         android:textSize="13sp"
         android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="후기 내용"
+        android:textColor="#111111"
+        android:textSize="15sp"
+        android:lineSpacingExtra="3dp" />
 
     <ImageView
         android:id="@+id/ivReviewImage"

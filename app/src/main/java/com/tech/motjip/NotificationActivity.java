@@ -542,6 +542,10 @@ public class NotificationActivity
                         adapter.setNotifications(
                                 notifications
                         );
+
+                        markUnreadNotificationsAsRead(
+                                notifications
+                        );
                     }
 
                     @Override
@@ -557,6 +561,45 @@ public class NotificationActivity
                     }
                 }
         );
+    }
+
+    private void markUnreadNotificationsAsRead(
+            List<NotificationItem> notifications
+    ) {
+
+        if (notifications == null
+                || notifications.isEmpty()) {
+
+            return;
+        }
+
+        for (NotificationItem item : notifications) {
+
+            if (item == null
+                    || item.isRead()
+                    || item.getNotificationId() == null) {
+
+                continue;
+            }
+
+            notificationController.markAsRead(
+                    item.getNotificationId(),
+                    new NotificationController.NotificationActionCallback() {
+
+                        @Override
+                        public void onSuccess() {
+
+                            item.setRead(true);
+                        }
+
+                        @Override
+                        public void onError(
+                                String message
+                        ) {
+                        }
+                    }
+            );
+        }
     }
 
     private void respondFriendRequest(

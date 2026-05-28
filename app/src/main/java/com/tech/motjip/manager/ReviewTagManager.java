@@ -43,6 +43,24 @@ public class ReviewTagManager {
             return;
         }
 
+        clearButtonTint(
+                button
+        );
+
+        button.setBackgroundResource(
+                R.drawable.review_tag_unselected
+        );
+
+        button.setTextColor(
+                context.getColor(
+                        android.R.color.black
+                )
+        );
+
+        button.setText(
+                tagName
+        );
+
         button.setOnClickListener(v -> {
 
             toggleTag(
@@ -69,6 +87,10 @@ public class ReviewTagManager {
                     tagName
             );
 
+            clearButtonTint(
+                    button
+            );
+
             button.setBackgroundResource(
                     R.drawable.review_tag_unselected
             );
@@ -77,6 +99,10 @@ public class ReviewTagManager {
                     context.getColor(
                             android.R.color.black
                     )
+            );
+
+            button.setText(
+                    tagName
             );
 
             Log.d(
@@ -91,6 +117,10 @@ public class ReviewTagManager {
                     tagName
             );
 
+            clearButtonTint(
+                    button
+            );
+
             button.setBackgroundResource(
                     R.drawable.review_tag_selected
             );
@@ -99,6 +129,10 @@ public class ReviewTagManager {
                     context.getColor(
                             android.R.color.white
                     )
+            );
+
+            button.setText(
+                    "✓ " + tagName
             );
 
             Log.d(
@@ -143,6 +177,10 @@ public class ReviewTagManager {
             );
         }
 
+        clearButtonTint(
+                button
+        );
+
         button.setBackgroundResource(
                 R.drawable.review_tag_selected
         );
@@ -151,6 +189,10 @@ public class ReviewTagManager {
                 context.getColor(
                         android.R.color.white
                 )
+        );
+
+        button.setText(
+                "✓ " + tagName
         );
 
         Log.d(
@@ -163,6 +205,19 @@ public class ReviewTagManager {
                 TAG,
                 "현재 선택 태그 = "
                         + selectedTags
+        );
+    }
+
+    private void clearButtonTint(
+            Button button
+    ) {
+
+        if (button == null) {
+            return;
+        }
+
+        button.setBackgroundTintList(
+                null
         );
     }
 

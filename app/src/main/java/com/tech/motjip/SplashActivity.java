@@ -13,6 +13,7 @@ public class SplashActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
 
         SharedPreferences prefs =
@@ -30,14 +31,7 @@ public class SplashActivity extends AppCompatActivity {
         // 이미 스플래시를 본 경우
         if (isSplashShown) {
 
-            startActivity(
-                    new Intent(
-                            SplashActivity.this,
-                            MainActivity.class
-                    )
-            );
-
-            finish();
+            moveToMain();
 
             return;
         }
@@ -75,14 +69,25 @@ public class SplashActivity extends AppCompatActivity {
 
         videoView.setOnCompletionListener(mediaPlayer -> {
 
-            startActivity(
-                    new Intent(
-                            SplashActivity.this,
-                            MainActivity.class
-                    )
-            );
-
-            finish();
+            moveToMain();
         });
+    }
+
+    private void moveToMain() {
+
+        Intent intent =
+                new Intent(
+                        SplashActivity.this,
+                        MainActivity.class
+                );
+
+        intent.setFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TASK
+        );
+
+        startActivity(intent);
+
+        finish();
     }
 }

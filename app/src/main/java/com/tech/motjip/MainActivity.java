@@ -115,10 +115,7 @@ public class MainActivity extends BaseActivity
                     "토큰 만료 자동 로그아웃"
             );
 
-            LoginStateManager.setLoginStatus(
-                    this,
-                    LoginStateManager.LOGOUT
-            );
+            forceLogout();
 
             initializeLoginScreen();
 
@@ -334,6 +331,31 @@ public class MainActivity extends BaseActivity
         });
     }
 
+    private void forceLogout() {
+
+        Log.d(
+                TAG,
+                "forceLogout 실행"
+        );
+
+        TokenManager tokenManager =
+                new TokenManager(
+                        this
+                );
+
+        tokenManager.clearTokens();
+
+        getSharedPreferences(
+                "auth",
+                MODE_PRIVATE
+        ).edit().clear().apply();
+
+        LoginStateManager.setLoginStatus(
+                this,
+                LoginStateManager.LOGOUT
+        );
+    }
+
     private void moveNextByUser(
             LoginResponseDto user
     ) {
@@ -344,25 +366,23 @@ public class MainActivity extends BaseActivity
                         + user
         );
 
-        if (user == null) {
+        if (user == null
+                || user.getMemberId() <= 0) {
 
             Log.e(
                     TAG,
-                    "moveNextByUser 중단 - user null"
+                    "비정상 로그인 정보 감지 - 강제 로그아웃"
             );
 
-            LoginStateManager.setLoginStatus(
-                    this,
-                    LoginStateManager.LOGOUT
-            );
+            forceLogout();
 
             initializeLoginScreen();
 
             DialogUtil.showMessageDialog(
                     this,
                     R.drawable.fail,
-                    "로그인 실패",
-                    "사용자 정보를 받지 못했습니다.",
+                    "로그인 정보 오류",
+                    "사용자 정보를 확인할 수 없어 다시 로그인해야 합니다.",
                     null
             );
 
@@ -456,7 +476,7 @@ public class MainActivity extends BaseActivity
         sendLocationToServer();
 
         if (user.getNickname() == null
-                || user.getNickname().isEmpty()) {
+                || user.getNickname().trim().isEmpty()) {
 
             Log.d(
                     TAG,
@@ -888,10 +908,7 @@ public class MainActivity extends BaseActivity
                 "로그인 화면 필요"
         );
 
-        LoginStateManager.setLoginStatus(
-                this,
-                LoginStateManager.LOGOUT
-        );
+        forceLogout();
 
         initializeLoginScreen();
     }
@@ -922,10 +939,7 @@ public class MainActivity extends BaseActivity
                         + message
         );
 
-        LoginStateManager.setLoginStatus(
-                this,
-                LoginStateManager.LOGOUT
-        );
+        forceLogout();
 
         DialogUtil.showMessageDialog(
                 this,

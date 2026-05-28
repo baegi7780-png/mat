@@ -29,6 +29,10 @@ public class CommunityPost implements Serializable {
 
     private String createdAt;
 
+    // 채팅방 링크
+    // 비어있을 수 있음
+    private String chatLink;
+
     private boolean favorite;
 
     private boolean mine;

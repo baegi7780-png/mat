@@ -22,6 +22,7 @@ import com.google.firebase.messaging.RemoteMessage;
 import com.tech.motjip.API.ApiService;
 import com.tech.motjip.API.RetrofitClient;
 import com.tech.motjip.Dto.RequestDto.FcmTokenRequestDto;
+import com.tech.motjip.manager.NotificationBadgeManager;
 
 import java.util.Map;
 
@@ -43,14 +44,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     public static final String ACTION_CHAT_ROOM_LIST_UPDATE =
             "com.tech.motjip.CHAT_ROOM_LIST_UPDATE";
 
+    public static final String ACTION_NOTIFICATION_BADGE_UPDATE =
+            "com.tech.motjip.NOTIFICATION_BADGE_UPDATE";
+
     @Override
     public void onNewToken(
             @NonNull String token
     ) {
 
-        super.onNewToken(
-                token
-        );
+        super.onNewToken(token);
 
         Log.d(
                 TAG,
@@ -67,9 +69,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             @NonNull RemoteMessage message
     ) {
 
-        super.onMessageReceived(
-                message
-        );
+        super.onMessageReceived(message);
 
         Log.d(
                 TAG,
@@ -162,15 +162,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         + roomType
         );
 
-        // 중요:
-        // 채팅방 리스트 실시간 갱신은 ChatFragment의 WebSocket이 담당한다.
-        // 여기서 브로드캐스트로 loadChatRooms()를 다시 호출하면
-        // WebSocket 갱신과 FCM 갱신이 겹쳐 unreadCount가
-        // 20 -> 22 -> 21 처럼 흔들릴 수 있다.
-        //
-        // 따라서 CHAT_MESSAGE 수신 시 채팅방 리스트 갱신 브로드캐스트는 보내지 않는다.
-        // FCM은 알림 표시만 담당한다.
-
         if ("CHAT_MESSAGE".equals(type)
                 && isCurrentlyViewingRoom(roomId)) {
 
@@ -183,6 +174,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             return;
         }
 
+        NotificationBadgeManager.sendBadgeUpdate(
+                this
+        );
+
         showNotification(
                 title,
                 body,
@@ -190,39 +185,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 roomId,
                 roomName,
                 roomType
-        );
-    }
-
-    private void sendChatRoomListUpdateBroadcast(
-            String roomId
-    ) {
-
-        Intent updateIntent =
-                new Intent(
-                        ACTION_CHAT_ROOM_LIST_UPDATE
-                );
-
-        if (roomId != null
-                && !roomId.trim().isEmpty()) {
-
-            updateIntent.putExtra(
-                    "roomId",
-                    roomId
-            );
-        }
-
-        updateIntent.setPackage(
-                getPackageName()
-        );
-
-        sendBroadcast(
-                updateIntent
-        );
-
-        Log.d(
-                TAG,
-                "채팅방 리스트 갱신 브로드캐스트 전송 roomId="
-                        + roomId
         );
     }
 
@@ -281,9 +243,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
 
         String value =
-                data.get(
-                        key
-                );
+                data.get(key);
 
         if (value == null
                 || value.trim().isEmpty()) {
@@ -548,6 +508,17 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             String token
     ) {
 
+        if (token == null
+                || token.trim().isEmpty()) {
+
+            Log.d(
+                    TAG,
+                    "FCM Token 없음"
+            );
+
+            return;
+        }
+
         SharedPreferences prefs =
                 getSharedPreferences(
                         "auth",
@@ -578,7 +549,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         FcmTokenRequestDto requestDto =
                 new FcmTokenRequestDto(
-                        token
+                        token.trim()
                 );
 
         apiService.updateFcmToken(
