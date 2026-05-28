@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.tech.motjip.API.RetrofitClient;
 import com.tech.motjip.Dto.ResponseDto.FriendResponseDto;
 import com.tech.motjip.R;
 
@@ -65,10 +66,10 @@ public class GroupFriendAdapter
                 friend.isSelected()
         );
 
-        Glide.with(holder.itemView.getContext())
-                .load(friend.getProfileImgUrl())
-                .placeholder(R.drawable.people)
-                .into(holder.ivProfile);
+        bindProfileImage(
+                holder,
+                friend
+        );
 
         holder.itemView.setOnClickListener(v -> {
 
@@ -95,8 +96,78 @@ public class GroupFriendAdapter
         });
     }
 
+    private void bindProfileImage(
+            @NonNull ViewHolder holder,
+            @NonNull FriendResponseDto friend
+    ) {
+
+        String profileImgUrl =
+                friend.getProfileImgUrl();
+
+        if (profileImgUrl != null
+                && !profileImgUrl.trim().isEmpty()) {
+
+            String imageUrl =
+                    buildImageUrl(
+                            profileImgUrl
+                    );
+
+            Glide.with(holder.itemView.getContext())
+                    .load(imageUrl)
+                    .placeholder(R.drawable.default_profile)
+                    .error(R.drawable.default_profile)
+                    .fallback(R.drawable.default_profile)
+                    .circleCrop()
+                    .into(holder.ivProfile);
+
+        } else {
+
+            Glide.with(holder.itemView.getContext())
+                    .load(R.drawable.default_profile)
+                    .placeholder(R.drawable.default_profile)
+                    .error(R.drawable.default_profile)
+                    .circleCrop()
+                    .into(holder.ivProfile);
+        }
+    }
+
+    private String buildImageUrl(
+            String imageUrl
+    ) {
+
+        if (imageUrl == null
+                || imageUrl.trim().isEmpty()) {
+
+            return null;
+        }
+
+        String trimmedUrl =
+                imageUrl.trim();
+
+        if (trimmedUrl.startsWith("http://")
+                || trimmedUrl.startsWith("https://")) {
+
+            return trimmedUrl;
+        }
+
+        return RetrofitClient.BASE_URL.replaceAll(
+                "/$",
+                ""
+        )
+                + "/"
+                + trimmedUrl.replaceAll(
+                "^/",
+                ""
+        );
+    }
+
     @Override
     public int getItemCount() {
+
+        if (friendList == null) {
+
+            return 0;
+        }
 
         return friendList.size();
     }
