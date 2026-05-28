@@ -106,17 +106,10 @@ public class ParticipantAdapter
                 nickname
         );
 
-
         String profileUrl =
-                participant.getProfileImgUrl();
-
-        if (profileUrl != null
-                && !profileUrl.startsWith("http")) {
-
-            profileUrl =
-                    RetrofitClient.BASE_URL
-                            + profileUrl;
-        }
+                buildImageUrl(
+                        participant.getProfileImgUrl()
+                );
 
         Glide.with(
                         holder.itemView.getContext()
@@ -155,6 +148,36 @@ public class ParticipantAdapter
         }
 
         return participantList.size();
+    }
+
+    private String buildImageUrl(
+            String imageUrl
+    ) {
+
+        if (imageUrl == null
+                || imageUrl.trim().isEmpty()) {
+
+            return null;
+        }
+
+        String trimmedUrl =
+                imageUrl.trim();
+
+        if (trimmedUrl.startsWith("http://")
+                || trimmedUrl.startsWith("https://")) {
+
+            return trimmedUrl;
+        }
+
+        return RetrofitClient.BASE_URL.replaceAll(
+                "/$",
+                ""
+        )
+                + "/"
+                + trimmedUrl.replaceAll(
+                "^/",
+                ""
+        );
     }
 
     static class ViewHolder

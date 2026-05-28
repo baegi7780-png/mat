@@ -148,8 +148,25 @@
 
         <activity
             android:name=".MessageActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustNothing" />
+            android:exported="true"
+            android:windowSoftInputMode="adjustNothing">
+            <intent-filter>
+
+                <action
+                    android:name="android.intent.action.VIEW" />
+
+                <category
+                    android:name="android.intent.category.DEFAULT" />
+
+                <category
+                    android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="motjip"
+                    android:host="invite" />
+            </intent-filter>
+
+        </activity>
 
         <activity
             android:name=".GroupCreateActivity"
