@@ -1,8 +1,11 @@
 package com.tech.motjip.Fragment;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -27,6 +30,7 @@ import com.tech.motjip.Adapter.ChatRoomAdapter;
 import com.tech.motjip.GroupCreateActivity;
 import com.tech.motjip.MessageActivity;
 import com.tech.motjip.Model.ChatRoom;
+import com.tech.motjip.MyFirebaseMessagingService;
 import com.tech.motjip.R;
 import com.tech.motjip.manager.socket.SocketManager;
 
@@ -47,16 +51,9 @@ public class ChatFragment extends Fragment {
 
     private ChatRoomAdapter adapter;
 
-    // =========================
-    // RecyclerView에 실제로 표시되는 목록
-    // =========================
     private final List<ChatRoom> roomList =
             new ArrayList<>();
 
-    // =========================
-    // 서버에서 받아온 원본 전체 목록
-    // 검색 필터를 해제하면 이 목록을 다시 표시
-    // =========================
     private final List<ChatRoom> allRoomList =
             new ArrayList<>();
 
@@ -75,20 +72,35 @@ public class ChatFragment extends Fragment {
     private boolean isLoadingRooms =
             false;
 
-    private boolean roomUpdateSubscribed =
-            false;
-
-    private boolean skipNextResumeRoomReload =
-            false;
-
     private boolean pendingRoomReload =
             false;
 
     private boolean isOpeningChatRoom =
             false;
 
+    private boolean isRoomListReceiverRegistered =
+            false;
+
     private final String TAG =
             "ChatFragment";
+
+    private final BroadcastReceiver roomListUpdateReceiver =
+            new BroadcastReceiver() {
+
+                @Override
+                public void onReceive(
+                        Context context,
+                        Intent intent
+                ) {
+
+                    Log.d(
+                            TAG,
+                            "FCM 채팅방 리스트 갱신 브로드캐스트 수신"
+                    );
+
+                    loadChatRooms();
+                }
+            };
 
     public ChatFragment() {
 
@@ -436,15 +448,25 @@ public class ChatFragment extends Fragment {
                             response.body()
                     );
 
-                    applyRoomSearchFilter();
+                    for (ChatRoom room : allRoomList) {
 
-                    Log.d(
-                            TAG,
-                            "채팅방 전체 개수: "
-                                    + allRoomList.size()
-                                    + ", 검색 후 표시 개수: "
-                                    + roomList.size()
-                    );
+                        if (room == null) {
+
+                            continue;
+                        }
+
+                        Log.d(
+                                "CHAT_ROOM_UNREAD",
+                                "roomId="
+                                        + room.getRoomId()
+                                        + ", roomName="
+                                        + room.getRoomName()
+                                        + ", unreadCount="
+                                        + room.getUnreadCount()
+                        );
+                    }
+
+                    applyRoomSearchFilter();
 
                 } else {
 
@@ -509,18 +531,8 @@ public class ChatFragment extends Fragment {
 
     private void connectRoomListSocket() {
 
-        Log.d(
-                TAG,
-                "connectRoomListSocket 시작"
-        );
-
         if (!isAdded()
                 || getContext() == null) {
-
-            Log.e(
-                    TAG,
-                    "connectRoomListSocket 중단: Fragment attach 안됨"
-            );
 
             return;
         }
@@ -529,25 +541,12 @@ public class ChatFragment extends Fragment {
                 ROOM_LIST_CONNECTED_KEY,
                 () -> {
 
-                    if (!roomUpdateSubscribed) {
+                    subscribeRoomUpdate();
 
-                        subscribeRoomUpdate();
-
-                        roomUpdateSubscribed =
-                                true;
-
-                        Log.d(
-                                "CHAT_TEST",
-                                "ROOM_UPDATE_SUBSCRIBED"
-                        );
-
-                    } else {
-
-                        Log.d(
-                                "CHAT_TEST",
-                                "ROOM_UPDATE_SUBSCRIBE_SKIP"
-                        );
-                    }
+                    Log.d(
+                            "CHAT_TEST",
+                            "ROOM_UPDATE_SUBSCRIBED_FORCE"
+                    );
                 }
         );
 
@@ -558,35 +557,34 @@ public class ChatFragment extends Fragment {
 
     private void subscribeRoomUpdate() {
 
-        Log.d(
-                TAG,
-                "subscribeRoomUpdate 시작"
-        );
+        Long memberId =
+                getLoginMemberId();
+
+        if (memberId == null
+                || memberId <= 0) {
+
+            return;
+        }
+
+        String roomUpdateTopic =
+                "/sub/chat/rooms/update/"
+                        + memberId;
 
         socketManager.subscribe(
                 ROOM_LIST_SUBSCRIBE_KEY,
-                "/sub/chat/rooms/update",
+                roomUpdateTopic,
                 payload -> {
 
                     Log.d(
-                            TAG,
-                            "채팅방 목록 업데이트 수신 body="
-                                    + payload
-                    );
-
-                    Log.d(
                             "CHAT_TEST",
-                            "ROOM_UPDATE_RECEIVED payload="
+                            "ROOM_UPDATE_RECEIVED topic="
+                                    + roomUpdateTopic
+                                    + ", payload="
                                     + payload
                     );
 
                     if (!isAdded()
                             || getActivity() == null) {
-
-                        Log.e(
-                                TAG,
-                                "업데이트 수신했지만 Fragment attach 안됨"
-                        );
 
                         return;
                     }
@@ -664,12 +662,6 @@ public class ChatFragment extends Fragment {
 
             if (position < 0) {
 
-                Log.d(
-                        TAG,
-                        "새 채팅방 감지 → 지연 전체 리스트 새로고침 roomId="
-                                + updatedRoomId
-                );
-
                 scheduleRoomReload(
                         200
                 );
@@ -694,198 +686,71 @@ public class ChatFragment extends Fragment {
             boolean changed =
                     false;
 
-            List<String> payloads =
-                    new ArrayList<>();
+            if (jsonObject.has(
+                    "unreadCount"
+            )) {
+
+                long unreadCount =
+                        jsonObject.optLong(
+                                "unreadCount",
+                                room.getUnreadCount()
+                        );
+
+                if (room.getUnreadCount()
+                        != unreadCount) {
+
+                    room.setUnreadCount(
+                            unreadCount
+                    );
+
+                    changed =
+                            true;
+                }
+            }
 
             if (jsonObject.has(
                     "lastMessage"
-            )
-                    && !jsonObject.isNull(
-                    "lastMessage"
             )) {
 
-                String newLastMessage =
+                room.setLastMessage(
                         jsonObject.optString(
                                 "lastMessage",
                                 room.getLastMessage()
-                        );
+                        )
+                );
 
-                if (!safeEquals(
-                        room.getLastMessage(),
-                        newLastMessage
-                )) {
-
-                    room.setLastMessage(
-                            newLastMessage
-                    );
-
-                    payloads.add(
-                            ChatRoomAdapter.PAYLOAD_LAST_MESSAGE
-                    );
-
-                    changed =
-                            true;
-                }
+                changed =
+                        true;
             }
 
             if (jsonObject.has(
                     "lastMessageType"
-            )
-                    && !jsonObject.isNull(
-                    "lastMessageType"
             )) {
 
-                String newLastMessageType =
+                room.setLastMessageType(
                         jsonObject.optString(
                                 "lastMessageType",
                                 room.getLastMessageType()
-                        );
+                        )
+                );
 
-                if (!safeEquals(
-                        room.getLastMessageType(),
-                        newLastMessageType
-                )) {
-
-                    room.setLastMessageType(
-                            newLastMessageType
-                    );
-
-                    if (!payloads.contains(
-                            ChatRoomAdapter.PAYLOAD_LAST_MESSAGE
-                    )) {
-
-                        payloads.add(
-                                ChatRoomAdapter.PAYLOAD_LAST_MESSAGE
-                        );
-                    }
-
-                    changed =
-                            true;
-                }
+                changed =
+                        true;
             }
 
             if (jsonObject.has(
                     "time"
-            )
-                    && !jsonObject.isNull(
-                    "time"
             )) {
 
-                String newTime =
+                room.setTime(
                         jsonObject.optString(
                                 "time",
                                 room.getTime()
-                        );
+                        )
+                );
 
-                if (!safeEquals(
-                        room.getTime(),
-                        newTime
-                )) {
-
-                    room.setTime(
-                            newTime
-                    );
-
-                    payloads.add(
-                            ChatRoomAdapter.PAYLOAD_TIME
-                    );
-
-                    changed =
-                            true;
-                }
-            }
-
-            if (jsonObject.has(
-                    "unreadCount"
-            )
-                    && !jsonObject.isNull(
-                    "unreadCount"
-            )) {
-
-                long myMemberId =
-                        getLoginMemberId();
-
-                long targetMemberId =
-                        jsonObject.optLong(
-                                "targetMemberId",
-                                -1L
-                        );
-
-                int unreadCount =
-                        jsonObject.optInt(
-                                "unreadCount",
-                                (int) room.getUnreadCount()
-                        );
-
-                if (targetMemberId > 0) {
-
-                    if (targetMemberId == myMemberId) {
-
-                        if (room.getUnreadCount()
-                                != unreadCount) {
-
-                            room.setUnreadCount(
-                                    unreadCount
-                            );
-
-                            payloads.add(
-                                    ChatRoomAdapter.PAYLOAD_UNREAD_COUNT
-                            );
-
-                            changed =
-                                    true;
-                        }
-
-                        Log.d(
-                                "CHAT_TEST",
-                                "ROOM_UNREAD_UPDATE roomId="
-                                        + room.getRoomId()
-                                        + ", targetMemberId="
-                                        + targetMemberId
-                                        + ", myMemberId="
-                                        + myMemberId
-                                        + ", unreadCount="
-                                        + room.getUnreadCount()
-                        );
-
-                    } else {
-
-                        Log.d(
-                                "CHAT_TEST",
-                                "ROOM_UNREAD_SKIP_NOT_TARGET roomId="
-                                        + room.getRoomId()
-                                        + ", targetMemberId="
-                                        + targetMemberId
-                                        + ", myMemberId="
-                                        + myMemberId
-                        );
-                    }
-
-                } else {
-
-                    if (room.getUnreadCount()
-                            != unreadCount) {
-
-                        room.setUnreadCount(
-                                unreadCount
-                        );
-
-                        payloads.add(
-                                ChatRoomAdapter.PAYLOAD_UNREAD_COUNT
-                        );
-
-                        changed =
-                                true;
-                    }
-
-                    Log.d(
-                            "CHAT_TEST",
-                            "ROOM_UNREAD_UPDATE_NO_TARGET roomId="
-                                    + room.getRoomId()
-                                    + ", unreadCount="
-                                    + room.getUnreadCount()
-                    );
-                }
+                changed =
+                        true;
             }
 
             if (changed
@@ -924,12 +789,6 @@ public class ChatFragment extends Fragment {
             Log.e(
                     TAG,
                     "채팅방 업데이트 payload 처리 실패",
-                    e
-            );
-
-            Log.e(
-                    "CHAT_TEST",
-                    "ROOM_UPDATE_PARSE_ERROR",
                     e
             );
 
@@ -998,13 +857,9 @@ public class ChatFragment extends Fragment {
                             i
                     );
 
-            if (room == null
-                    || room.getRoomId() == null) {
-
-                continue;
-            }
-
-            if (room.getRoomId() == roomId) {
+            if (room != null
+                    && room.getRoomId() != null
+                    && room.getRoomId() == roomId) {
 
                 return i;
             }
@@ -1017,40 +872,8 @@ public class ChatFragment extends Fragment {
             ChatRoom room
     ) {
 
-        Log.d(
-                "CHAT_CRASH_TRACE",
-                "OPEN_CHAT_ROOM_START isAdded="
-                        + isAdded()
-                        + ", contextNull="
-                        + (getContext() == null)
-                        + ", activityNull="
-                        + (getActivity() == null)
-                        + ", recyclerViewNull="
-                        + (recyclerView == null)
-                        + ", adapterNull="
-                        + (adapter == null)
-                        + ", isLoadingRooms="
-                        + isLoadingRooms
-                        + ", isOpeningChatRoom="
-                        + isOpeningChatRoom
-        );
-
-        if (isLoadingRooms) {
-
-            Log.d(
-                    TAG,
-                    "채팅방 목록 로딩 중 클릭 무시"
-            );
-
-            return;
-        }
-
-        if (isOpeningChatRoom) {
-
-            Log.d(
-                    TAG,
-                    "채팅방 중복 열기 차단"
-            );
+        if (isLoadingRooms
+                || isOpeningChatRoom) {
 
             return;
         }
@@ -1061,22 +884,12 @@ public class ChatFragment extends Fragment {
                 || recyclerView == null
                 || adapter == null) {
 
-            Log.e(
-                    TAG,
-                    "Fragment 상태 불안정 - 채팅방 이동 차단"
-            );
-
             return;
         }
 
         if (room == null
                 || room.getRoomId() == null
                 || room.getRoomId() <= 0) {
-
-            Log.e(
-                    TAG,
-                    "잘못된 roomId"
-            );
 
             Toast.makeText(
                     requireContext(),
@@ -1091,14 +904,6 @@ public class ChatFragment extends Fragment {
                 ChatRoomAdapter.getDisplayRoomName(
                         room
                 );
-
-        Log.d(
-                TAG,
-                "채팅방 클릭 roomId="
-                        + room.getRoomId()
-                        + ", roomName="
-                        + displayName
-        );
 
         Intent intent =
                 new Intent(
@@ -1124,19 +929,71 @@ public class ChatFragment extends Fragment {
         isOpeningChatRoom =
                 true;
 
-        Log.d(
-                "CHAT_CRASH_TRACE",
-                "OPEN_CHAT_ROOM_LAUNCH_START_ACTIVITY roomId="
-                        + room.getRoomId()
-                        + ", roomName="
-                        + displayName
-                        + ", roomType="
-                        + room.getRoomType()
-        );
-
         startActivity(
                 intent
         );
+    }
+
+    private void registerRoomListUpdateReceiver() {
+
+        if (!isAdded()
+                || getContext() == null
+                || isRoomListReceiverRegistered) {
+
+            return;
+        }
+
+        IntentFilter filter =
+                new IntentFilter(
+                        MyFirebaseMessagingService.ACTION_CHAT_ROOM_LIST_UPDATE
+                );
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            requireContext().registerReceiver(
+                    roomListUpdateReceiver,
+                    filter,
+                    Context.RECEIVER_NOT_EXPORTED
+            );
+
+        } else {
+
+            requireContext().registerReceiver(
+                    roomListUpdateReceiver,
+                    filter
+            );
+        }
+
+        isRoomListReceiverRegistered =
+                true;
+    }
+
+    private void unregisterRoomListUpdateReceiver() {
+
+        if (!isAdded()
+                || getContext() == null
+                || !isRoomListReceiverRegistered) {
+
+            return;
+        }
+
+        try {
+
+            requireContext().unregisterReceiver(
+                    roomListUpdateReceiver
+            );
+
+        } catch (Exception e) {
+
+            Log.e(
+                    TAG,
+                    "receiver 해제 실패",
+                    e
+            );
+        }
+
+        isRoomListReceiverRegistered =
+                false;
     }
 
     @Override
@@ -1147,54 +1004,32 @@ public class ChatFragment extends Fragment {
         isOpeningChatRoom =
                 false;
 
-        Log.d(
-                TAG,
-                "onResume"
-        );
+        registerRoomListUpdateReceiver();
 
-        if (skipNextResumeRoomReload) {
-
-            skipNextResumeRoomReload =
-                    false;
-
-        } else {
-
-            loadChatRooms();
-        }
+        loadChatRooms();
 
         if (!socketManager.isConnected()) {
 
             connectRoomListSocket();
 
-        } else if (!roomUpdateSubscribed) {
+        } else {
 
             subscribeRoomUpdate();
-
-            roomUpdateSubscribed =
-                    true;
         }
     }
 
     @Override
     public void onPause() {
 
-        super.onPause();
+        unregisterRoomListUpdateReceiver();
 
-        Log.d(
-                TAG,
-                "onPause"
-        );
+        super.onPause();
     }
 
     @Override
     public void onDestroyView() {
 
         super.onDestroyView();
-
-        Log.d(
-                TAG,
-                "onDestroyView"
-        );
 
         socketManager.unsubscribe(
                 ROOM_LIST_SUBSCRIBE_KEY
@@ -1204,8 +1039,7 @@ public class ChatFragment extends Fragment {
                 ROOM_LIST_CONNECTED_KEY
         );
 
-        roomUpdateSubscribed =
-                false;
+        unregisterRoomListUpdateReceiver();
 
         pendingRoomReload =
                 false;

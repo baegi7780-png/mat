@@ -40,6 +40,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String CHANNEL_NAME =
             "맛집 알림";
 
+    public static final String ACTION_CHAT_ROOM_LIST_UPDATE =
+            "com.tech.motjip.CHAT_ROOM_LIST_UPDATE";
+
     @Override
     public void onNewToken(
             @NonNull String token
@@ -159,6 +162,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         + roomType
         );
 
+        if ("CHAT_MESSAGE".equals(type)) {
+
+            sendChatRoomListUpdateBroadcast(
+                    roomId
+            );
+        }
+
         if ("CHAT_MESSAGE".equals(type)
                 && isCurrentlyViewingRoom(roomId)) {
 
@@ -178,6 +188,39 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 roomId,
                 roomName,
                 roomType
+        );
+    }
+
+    private void sendChatRoomListUpdateBroadcast(
+            String roomId
+    ) {
+
+        Intent updateIntent =
+                new Intent(
+                        ACTION_CHAT_ROOM_LIST_UPDATE
+                );
+
+        if (roomId != null
+                && !roomId.trim().isEmpty()) {
+
+            updateIntent.putExtra(
+                    "roomId",
+                    roomId
+            );
+        }
+
+        updateIntent.setPackage(
+                getPackageName()
+        );
+
+        sendBroadcast(
+                updateIntent
+        );
+
+        Log.d(
+                TAG,
+                "채팅방 리스트 갱신 브로드캐스트 전송 roomId="
+                        + roomId
         );
     }
 
