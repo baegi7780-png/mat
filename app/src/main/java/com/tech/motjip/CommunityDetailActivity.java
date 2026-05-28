@@ -1,9 +1,12 @@
 package com.tech.motjip;
 
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +43,8 @@ public class CommunityDetailActivity
     private TextView tvMemberCount;
 
     private Button btnJoin;
+
+    private Button btnOpenChatLink;
 
     private MaterialButton btnMemberList;
 
@@ -108,6 +113,9 @@ public class CommunityDetailActivity
         btnJoin =
                 findViewById(R.id.btnJoin);
 
+        btnOpenChatLink =
+                findViewById(R.id.btnOpenChatLink);
+
         btnMemberList =
                 findViewById(R.id.btnMemberList);
 
@@ -140,6 +148,8 @@ public class CommunityDetailActivity
         setupJoinedState();
 
         setupJoinButton();
+
+        setupChatLinkButton();
 
         setupMemberListButton();
 
@@ -510,6 +520,139 @@ public class CommunityDetailActivity
         });
     }
 
+    private void setupChatLinkButton() {
+
+        if (!post.isJoined() && !post.isMine()) {
+
+            btnOpenChatLink.setVisibility(
+                    View.GONE
+            );
+
+            return;
+        }
+
+        String chatLink =
+                post.getChatLink();
+
+        if (chatLink == null
+                || chatLink.trim().isEmpty()) {
+
+            btnOpenChatLink.setVisibility(
+                    View.GONE
+            );
+
+            return;
+        }
+
+        String finalChatLink =
+                chatLink.trim();
+
+        String lowerLink =
+                finalChatLink.toLowerCase();
+
+        btnOpenChatLink.setVisibility(
+                View.VISIBLE
+        );
+
+        if (lowerLink.contains("open.kakao.com")) {
+
+            btnOpenChatLink.setText(
+                    "오픈채팅 참여하기"
+            );
+
+        } else {
+
+            btnOpenChatLink.setText(
+                    "채팅방 링크 열기"
+            );
+        }
+
+        btnOpenChatLink.setOnClickListener(v -> {
+
+            try {
+
+                String openLink =
+                        finalChatLink;
+
+                if (!openLink.startsWith("http://")
+                        && !openLink.startsWith("https://")) {
+
+                    openLink =
+                            "https://" + openLink;
+                }
+
+                Intent intent =
+                        new Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(openLink)
+                        );
+
+                if (intent.resolveActivity(getPackageManager()) != null) {
+
+                    startActivity(intent);
+
+                } else {
+
+                    Toast.makeText(
+                            CommunityDetailActivity.this,
+                            "링크를 열 수 있는 앱이 없습니다.",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+
+            } catch (Exception e) {
+
+                Toast.makeText(
+                        CommunityDetailActivity.this,
+                        "채팅방 링크를 열 수 없습니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+
+        btnOpenChatLink.setOnLongClickListener(v -> {
+
+            try {
+
+                ClipboardManager clipboardManager =
+                        (ClipboardManager) getSystemService(
+                                CLIPBOARD_SERVICE
+                        );
+
+                ClipData clipData =
+                        ClipData.newPlainText(
+                                "chat_link",
+                                finalChatLink
+                        );
+
+                if (clipboardManager != null) {
+
+                    clipboardManager.setPrimaryClip(
+                            clipData
+                    );
+
+                    Toast.makeText(
+                            CommunityDetailActivity.this,
+                            "링크가 복사되었습니다.",
+                            Toast.LENGTH_SHORT
+                    ).show();
+
+                    return true;
+                }
+
+            } catch (Exception e) {
+
+                Toast.makeText(
+                        CommunityDetailActivity.this,
+                        "링크 복사에 실패했습니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+
+            return false;
+        });
+    }
+
     private void setupMemberListButton() {
 
         btnMemberList.setOnClickListener(v -> {
@@ -549,6 +692,8 @@ public class CommunityDetailActivity
                                         + "명 참여중"
                         );
 
+                        setupChatLinkButton();
+
                         setResult(RESULT_OK);
 
                         Toast.makeText(
@@ -568,6 +713,8 @@ public class CommunityDetailActivity
                     public void onAlreadyJoined() {
 
                         post.setJoined(true);
+
+                        setupChatLinkButton();
 
                         setResult(RESULT_OK);
 
@@ -623,6 +770,8 @@ public class CommunityDetailActivity
                                 post.getMemberCount()
                                         + "명 참여중"
                         );
+
+                        setupChatLinkButton();
 
                         setResult(RESULT_OK);
 

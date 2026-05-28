@@ -211,6 +211,7 @@ public interface ApiService {
             @Part("title") RequestBody title,
             @Part("location") RequestBody location,
             @Part("date") RequestBody date,
+            @Part("chatLink") RequestBody chatLink,
             @Part("content") RequestBody content,
             @Part MultipartBody.Part image
     );
@@ -224,6 +225,7 @@ public interface ApiService {
             @Part("title") RequestBody title,
             @Part("location") RequestBody location,
             @Part("date") RequestBody date,
+            @Part("chatLink") RequestBody chatLink,
             @Part("content") RequestBody content,
             @Part MultipartBody.Part image
     );
@@ -446,4 +448,7 @@ public interface ApiService {
             @Path("reviewId") Long reviewId,
             @Query("memberId") Long memberId
     );
+
+    @GET("/notifications/unread-count")
+    Call<Long> getUnreadNotificationCount();
 }
