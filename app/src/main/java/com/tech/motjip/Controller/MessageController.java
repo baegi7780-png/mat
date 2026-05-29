@@ -196,6 +196,10 @@ public class MessageController {
 
                         scrollToBottomAfterSend();
 
+                        refreshRoomTitleIfMemberChanged(
+                                message
+                        );
+
                         return;
                     }
 
@@ -214,7 +218,9 @@ public class MessageController {
                         message
                 );
 
-
+                refreshRoomTitleIfMemberChanged(
+                        message
+                );
             });
         });
 
@@ -238,6 +244,60 @@ public class MessageController {
                 );
             }
         });
+    }
+
+    private void refreshRoomTitleIfMemberChanged(
+            Message message
+    ) {
+
+        if (message == null) {
+
+            return;
+        }
+
+        if (!"SYSTEM".equals(
+                message.getMessageType()
+        )) {
+
+            return;
+        }
+
+        String content =
+                message.getMessageContent();
+
+        if (content == null
+                || content.trim().isEmpty()) {
+
+            return;
+        }
+
+        boolean memberChanged =
+                content.contains("참여")
+                        || content.contains("초대")
+                        || content.contains("나갔")
+                        || content.contains("입장");
+
+        if (!memberChanged) {
+
+            return;
+        }
+
+        recyclerView.postDelayed(() -> {
+
+            try {
+
+                activity.refreshCurrentRoomTitle();
+
+            } catch (Exception e) {
+
+                Log.e(
+                        TAG,
+                        "채팅방 제목 갱신 실패",
+                        e
+                );
+            }
+
+        }, 300);
     }
 
     private void setupKeyboardScrollListener() {
@@ -487,6 +547,8 @@ public class MessageController {
 
         disableRecyclerViewChangeAnimation();
 
+        webSocketManager.connect();
+
         if (currentUserId != null
                 && currentUserId > 0) {
 
@@ -506,8 +568,6 @@ public class MessageController {
         );
 
         loadChatHistory();
-
-        webSocketManager.connect();
     }
 
     private void prepareUserFallback() {
@@ -879,7 +939,6 @@ public class MessageController {
                 imageUrl
         );
     }
-
 
     private void sendVideoMessage(
             String videoUrl

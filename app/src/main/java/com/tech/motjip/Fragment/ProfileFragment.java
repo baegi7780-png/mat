@@ -34,6 +34,7 @@ import com.tech.motjip.MyInfoActivity;
 import com.tech.motjip.NotificationActivity;
 import com.tech.motjip.R;
 import com.tech.motjip.manager.NotificationBadgeManager;
+import com.tech.motjip.Config.AppConfig;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -86,7 +87,7 @@ public class ProfileFragment extends Fragment {
             "CACHED_PROFILE_IMG_URL";
 
     private static final String BASE_IMAGE_URL =
-            "https://spiny-impure-laptop.ngrok-free.dev";
+            AppConfig.BASE_URL;
 
     private final BroadcastReceiver notificationBadgeReceiver =
             new BroadcastReceiver() {

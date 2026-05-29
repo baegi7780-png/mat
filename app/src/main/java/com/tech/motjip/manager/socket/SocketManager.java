@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.tech.motjip.Auth.TokenManager;
+import com.tech.motjip.Config.AppConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +34,7 @@ public class SocketManager {
             "SocketManager";
 
     private static final String SOCKET_URL =
-            "wss://spiny-impure-laptop.ngrok-free.dev/ws/chat/websocket";
+            AppConfig.WS_URL;
 
     private static SocketManager instance;
 
@@ -192,6 +193,12 @@ public class SocketManager {
                     "SOCKET_AUTH_TOKEN_EMPTY"
             );
         }
+
+        Log.d(
+                TAG,
+                "SOCKET_URL = "
+                        + SOCKET_URL
+        );
 
         stompClient =
                 Stomp.over(

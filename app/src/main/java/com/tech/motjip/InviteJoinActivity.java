@@ -16,22 +16,30 @@ import com.tech.motjip.Model.ChatRoom;
 import java.io.IOException;
 
 import okhttp3.ResponseBody;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class InviteJoinActivity extends AppCompatActivity {
 
-    private static final String TAG = "InviteJoinActivity";
+    private static final String TAG =
+            "InviteJoinActivity";
 
     private ApiService apiService;
 
     private String inviteCode;
+
     private Long memberId;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(
+            Bundle savedInstanceState
+    ) {
+
+        super.onCreate(
+                savedInstanceState
+        );
 
         apiService =
                 RetrofitClient.getApiService(
@@ -44,7 +52,10 @@ public class InviteJoinActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onNewIntent(Intent intent) {
+    protected void onNewIntent(
+            Intent intent
+    ) {
+
         super.onNewIntent(
                 intent
         );
@@ -85,7 +96,8 @@ public class InviteJoinActivity extends AppCompatActivity {
 
         Log.d(
                 TAG,
-                "딥링크 URI = " + uri
+                "딥링크 URI = "
+                        + uri
         );
 
         inviteCode =
@@ -108,7 +120,8 @@ public class InviteJoinActivity extends AppCompatActivity {
 
         Log.d(
                 TAG,
-                "초대 코드 = " + inviteCode
+                "초대 코드 = "
+                        + inviteCode
         );
 
         memberId =
@@ -143,7 +156,8 @@ public class InviteJoinActivity extends AppCompatActivity {
 
         Log.d(
                 TAG,
-                "로그인 memberId = " + memberId
+                "로그인 memberId = "
+                        + memberId
         );
 
         joinRoomByInviteCode();
@@ -154,12 +168,12 @@ public class InviteJoinActivity extends AppCompatActivity {
         apiService.joinRoomByInviteCode(
                 inviteCode,
                 memberId
-        ).enqueue(new Callback<String>() {
+        ).enqueue(new Callback<ResponseBody>() {
 
             @Override
             public void onResponse(
-                    Call<String> call,
-                    Response<String> response
+                    Call<ResponseBody> call,
+                    Response<ResponseBody> response
             ) {
 
                 if (!response.isSuccessful()) {
@@ -193,7 +207,8 @@ public class InviteJoinActivity extends AppCompatActivity {
 
                 Log.d(
                         TAG,
-                        "초대 참여 성공 body = " + response.body()
+                        "초대 참여 성공 code = "
+                                + response.code()
                 );
 
                 loadRoomByInviteCode();
@@ -201,7 +216,7 @@ public class InviteJoinActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(
-                    Call<String> call,
+                    Call<ResponseBody> call,
                     Throwable t
             ) {
 
@@ -306,6 +321,7 @@ public class InviteJoinActivity extends AppCompatActivity {
     ) {
 
         if (errorBody == null) {
+
             return null;
         }
 
@@ -316,7 +332,8 @@ public class InviteJoinActivity extends AppCompatActivity {
 
             Log.e(
                     TAG,
-                    "서버 errorBody = " + error
+                    "서버 errorBody = "
+                            + error
             );
 
             return error;
@@ -362,6 +379,14 @@ public class InviteJoinActivity extends AppCompatActivity {
             );
         }
 
+        if (chatRoom.getRoomType() != null) {
+
+            intent.putExtra(
+                    "roomType",
+                    chatRoom.getRoomType()
+            );
+        }
+
         intent.addFlags(
                 Intent.FLAG_ACTIVITY_CLEAR_TOP
         );
@@ -388,6 +413,7 @@ public class InviteJoinActivity extends AppCompatActivity {
                 );
 
         if (savedMemberId == -1L) {
+
             return null;
         }
 
