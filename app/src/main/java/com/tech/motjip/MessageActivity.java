@@ -72,15 +72,26 @@ public class MessageActivity extends AppCompatActivity {
 
     private MessageController messageController;
 
-    private long roomId = -1L;
-    private Long myMemberId = -1L;
+    private long roomId =
+            -1L;
 
-    private boolean isControllerStarted = false;
-    private boolean reopenMemberPanelAfterInvite = false;
-    private boolean isMemberPanelAnimating = false;
-    private boolean skipNextResumeMemberReload = false;
+    private Long myMemberId =
+            -1L;
 
-    private int defaultRecyclerBottomPadding = 16;
+    private boolean isControllerStarted =
+            false;
+
+    private boolean reopenMemberPanelAfterInvite =
+            false;
+
+    private boolean isMemberPanelAnimating =
+            false;
+
+    private boolean skipNextResumeMemberReload =
+            false;
+
+    private int defaultRecyclerBottomPadding =
+            16;
 
     private SharedPreferences activeRoomPrefs;
 
@@ -106,8 +117,6 @@ public class MessageActivity extends AppCompatActivity {
                             ).show();
 
                             if (messageController != null) {
-
-                                messageController.forceReloadChatHistory();
 
                                 refreshCurrentRoomTitle();
                             }
@@ -661,20 +670,6 @@ public class MessageActivity extends AppCompatActivity {
                 true;
 
         saveActiveChatRoom();
-
-        recyclerView.postDelayed(() -> {
-
-            if (messageController != null) {
-
-                Log.d(
-                        TAG,
-                        "최초 진입 안정화 재동기화 실행"
-                );
-
-                messageController.forceReloadChatHistory();
-            }
-
-        }, 700);
     }
 
     private void handleNotificationIntent(
@@ -722,8 +717,6 @@ public class MessageActivity extends AppCompatActivity {
             );
 
             if (messageController != null) {
-
-                messageController.forceReloadChatHistory();
 
                 refreshCurrentRoomTitle();
             }
@@ -925,17 +918,25 @@ public class MessageActivity extends AppCompatActivity {
         for (int i = 0; i < segments.size(); i++) {
 
             String segment =
-                    segments.get(i);
+                    segments.get(
+                            i
+                    );
 
-            if ("invite".equalsIgnoreCase(segment)
+            if ("invite".equalsIgnoreCase(
+                    segment
+            )
                     && i + 1 < segments.size()) {
 
                 String inviteCode =
-                        segments.get(i + 1);
+                        segments.get(
+                                i + 1
+                        );
 
                 if (inviteCode != null
                         && !inviteCode.trim().isEmpty()
-                        && !"join".equalsIgnoreCase(inviteCode)) {
+                        && !"join".equalsIgnoreCase(
+                        inviteCode
+                )) {
 
                     return inviteCode.trim();
                 }
@@ -947,7 +948,9 @@ public class MessageActivity extends AppCompatActivity {
 
         if (lastSegment != null
                 && !lastSegment.trim().isEmpty()
-                && !"join".equalsIgnoreCase(lastSegment)) {
+                && !"join".equalsIgnoreCase(
+                lastSegment
+        )) {
 
             return lastSegment.trim();
         }
@@ -1837,8 +1840,6 @@ public class MessageActivity extends AppCompatActivity {
                 && isControllerStarted) {
 
             messageController.onResume();
-
-            messageController.forceReloadChatHistory();
 
             refreshCurrentRoomTitle();
         }

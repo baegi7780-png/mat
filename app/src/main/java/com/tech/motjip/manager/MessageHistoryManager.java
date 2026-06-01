@@ -193,14 +193,6 @@ public class MessageHistoryManager {
                                     100
                             );
 
-                            if (currentUserId != null
-                                    && currentUserId > 0) {
-
-                                roomStateManager.updateReadStatus(
-                                        currentUserId
-                                );
-                            }
-
                             Log.d(
                                     TAG,
                                     "서버 채팅 내역 병합 로드 완료 size = "
