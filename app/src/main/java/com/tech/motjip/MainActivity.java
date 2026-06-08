@@ -513,13 +513,13 @@ public class MainActivity extends BaseActivity
 
             Log.d(
                     TAG,
-                    "닉네임 있음 → HomeActivity 이동"
+                    "닉네임 있음 → MapActivity 이동"
             );
 
             Intent intent =
                     new Intent(
                             MainActivity.this,
-                            HomeActivity.class
+                            MapActivity.class
                     );
 
             intent.putExtra(

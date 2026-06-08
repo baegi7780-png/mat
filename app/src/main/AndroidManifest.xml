@@ -98,7 +98,7 @@
             android:exported="true" />
 
         <activity
-            android:name=".HomeActivity"
+            android:name=".MapActivity"
             android:exported="false" />
 
         <activity
